@@ -28,4 +28,6 @@ int main()
 
     ftst_run_test(FTST_TEST_CASE(simple_integer));
     ftst_run_test(FTST_TEST_CASE(complex_format_int));
+    
+    ftst_exit();
 }
