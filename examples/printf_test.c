@@ -23,8 +23,8 @@ FTST_TEST(complex_format_int)
 
 int main()
 {
-    //ftst_init(RESULT_FILE);
-    ftst_init(NULL); // result go to stderr
+    //ftst_init_c(RESULT_FILE);
+    ftst_init(stderr);
 
     FTST_RUNTEST(simple_integer);
     FTST_RUNTEST(complex_format_int);
