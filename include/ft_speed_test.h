@@ -14,13 +14,15 @@ ftst_fptr   g_ftst_fptr;
 clock_t     g_ftst_start;
 typedef     void(*ftst_test_t)(void);
 
-# define FTST_TEST_CASE(test_name) &ftst_test_case_##test_name
+# define FTST_TEST_CASE(test_name) ftst_test_case_##test_name
 # define FTST_TEST_CASE_NAME(test_name) #test_name
 
 # define FTST_TEST(test_name)                    \
-void ftst_test_case_##test_name(void)
+void FTST_TEST_CASE(test_name)(void)
+
 
 # define FTST_ERROR(error_message) ftst_error(#error_message)
+
 void ftst_error(char const* error_message)
 {
     fprintf(stderr, "ftst error | %s\n", error_message);
@@ -58,7 +60,9 @@ void ftst_exit(void)
     g_ftst_fptr.fptr = NULL;
 }
 
+
 #define FTST_RUNTEST(test_name) ftst_run_test(FTST_TEST_CASE(test_name), FTST_TEST_CASE_NAME(test_name))
+
 void ftst_run_test(ftst_test_t test_case, char const* test_case_name)
 {
     clock_t test_time;

@@ -28,4 +28,6 @@ int main()
 
     FTST_RUNTEST(simple_integer);
     FTST_RUNTEST(complex_format_int);
+
+    ftst_exit();
 }
