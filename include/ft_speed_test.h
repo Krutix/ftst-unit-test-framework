@@ -61,7 +61,7 @@ void ftst_exit(void)
 }
 
 
-#define FTST_RUNTEST(test_name) ftst_run_test(FTST_TEST_CASE(test_name), FTST_TEST_CASE_NAME(test_name))
+#define FTST_RUNTEST(test_name) ftst_run_test(&FTST_TEST_CASE(test_name), FTST_TEST_CASE_NAME(test_name))
 
 void ftst_run_test(ftst_test_t test_case, char const* test_case_name)
 {
