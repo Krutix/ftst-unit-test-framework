@@ -7,6 +7,14 @@ FTST_TEST(equal_test)
     FTST_EXPECT_EQ(1, 1);
 }
 
+FTST_TEST(bool_test)
+{
+    FTST_EXPECT_TRUE(342);
+    FTST_EXPECT_FALSE(0);
+    FTST_EXPECT_FALSE(423);
+    FTST_ASSERT_TRUE(0);
+}
+
 FTST_TEST(error_test)
 {
     FTST_EXPECT_EQ(15, 1);
@@ -20,6 +28,7 @@ int main()
 
     FTST_RUNTEST(equal_test);
     FTST_RUNTEST(error_test);
+    FTST_RUNTEST(bool_test);
 
     ftst_exit();
 }
