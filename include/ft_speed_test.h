@@ -14,8 +14,30 @@ FILE*       __g_ftst_stream;
 FILE*       __g_ftst_table;
 typedef     void(*__ftst_test_t)(__ftst_test*);
 
-# ifdef FTST_PRETTY
+# ifdef FTST_NO_COLOR
+#  define __FTST_ANSI_COLOR_RED
+#  define __FTST_ANSI_COLOR_GREEN
+#  define __FTST_ANSI_COLOR_YELLOW
+#  define __FTST_ANSI_COLOR_BLUE
+#  define __FTST_ANSI_COLOR_MAGENTA
+#  define __FTST_ANSI_COLOR_CYAN
+#  define __FTST_ANSI_COLOR_RESET
+# else
+#  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
+#  define __FTST_ANSI_COLOR_GREEN   "\x1b[32m"
+#  define __FTST_ANSI_COLOR_YELLOW  "\x1b[33m"
+#  define __FTST_ANSI_COLOR_BLUE    "\x1b[34m"
+#  define __FTST_ANSI_COLOR_MAGENTA "\x1b[35m"
+#  define __FTST_ANSI_COLOR_CYAN    "\x1b[36m"
+#  define __FTST_ANSI_COLOR_RESET   "\x1b[0m"
 # endif
+
+# define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_SUCCESS(str)         __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
+
 
 # define __FTST_TEST_CASE(test_name) __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name) #test_name
@@ -41,15 +63,18 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 void    __ftst_test_error(size_t const line, char const* test_case_name,
                             char const *condition, const char* actual, char const* expect)
 {
-    fprintf(__g_ftst_stream, "'%s' test failed\n%d:\tFrom condition: %s, actual: %s, expected: %s\n",
-                    test_case_name, line, condition, actual, expect);
+    fprintf(__g_ftst_stream,
+        "'%s' test " __FTST_PRETTY_FAILED("[failed]") \
+        "\n%d:\tFrom condition:  " __FTST_PRETTY_INFO("%s") ",   actual:  " \
+        __FTST_PRETTY_INFO("%s") ",   expected:  " __FTST_PRETTY_INFO("%s\n"),
+            test_case_name, line, condition, actual, expect);
 }
 
 
 # define __FTST_EQ_DEFAULT(cond, expected, else_funct,...) __FTST_EQ_FORMAT(cond, expected, else_funct, d)
 # define __FTST_EQ_FORMAT(cond, expected, else_funct, format,...) __FTST_SIMPLE_TEST((cond) == (expected), \
-                { char actual_value[124]; snprintf(actual_value, sizeof(actual_value), "%"#format, cond);       \
-                char expected_value[124]; snprintf(expected_value, sizeof(expected_value), "%"#format, expected);       \
+                { char actual_value[128];   snprintf(actual_value, sizeof(actual_value), "%"#format, cond);       \
+                  char expected_value[128]; snprintf(expected_value, sizeof(expected_value), "%"#format, expected);       \
                 __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
 
 # define __FTST_EQ_CHOOSER(_f1, _f2, _f3, ...) _f3 
@@ -101,23 +126,63 @@ void    ftst_exit(void)
 }
 
 
-#define FTST_RUNTEST(test_name) __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
+# define FTST_RUNTEST(test_name) __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
 
 clock_t __ftst_start_timer() { return clock(); }
 clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
 
+void    __ftst_pretty_print_start(char const* test_case_name)
+{
+    fprintf(__g_ftst_stream,
+        __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
+                                                                            test_case_name);
+}
+
+void    __ftst_pretty_print_result(char const* test_case_name, __ftst_test test, clock_t time)
+{
+    if (test.passed == test.launched)
+        fprintf(__g_ftst_stream, __FTST_PRETTY_SUCCESS("[success]"));
+    else
+        fprintf(__g_ftst_stream, __FTST_PRETTY_FAILED("[failed]"));
+
+    fprintf(__g_ftst_stream,
+        " : " __FTST_PRETTY_TEST_CASE_NAME("%s") " | ",
+                                    test_case_name);
+
+    if (test.passed == test.launched)
+        fprintf(__g_ftst_stream,
+            __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                test.passed,                   test.launched);
+    else
+        fprintf(__g_ftst_stream,
+            __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                test.passed,                   test.launched);
+
+    fprintf(__g_ftst_stream,
+        " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
+                            time / 1000.);
+}
+
+void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
+{
+    fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, time / 1000.);
+}
+
 void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
-    clock_t test_time;
-    clock_t start;
+    clock_t time;
     __ftst_test test = (__ftst_test){ 0, 0 };
 
-    start = __ftst_start_timer();
+    __ftst_pretty_print_start(test_case_name);
+
+    time = __ftst_start_timer();
     test_case(&test);
-    test_time = __ftst_end_timer(start);
-    fprintf(__g_ftst_stream, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
+    time = __ftst_end_timer(time);
+
+    __ftst_pretty_print_result(test_case_name, test, time);
+
     if (__g_ftst_table)
-        fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
+        __ftst_pretty_print_table(test_case_name, test, time);
 }
 
 
