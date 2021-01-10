@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <fcntl.h>
-#include "../include/ft_speed_test.h"
+#include "ft_speed_test.h"
 
 #define TEST_PRINTF(F, ...) printf(F, __VA_ARGS__)
 

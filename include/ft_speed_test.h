@@ -9,22 +9,23 @@
 typedef struct {
     FILE*       fptr;
     char        owned;
-} __ftst_fptr;
+}               __ftst_fptr;
 
 typedef struct {
-    size_t passed;
-    size_t launched;
-} __ftst_test;
+    size_t      passed;
+    size_t      launched;
+}               __ftst_test;
 
 __ftst_fptr   __g_ftst_fptr;
 typedef     void(*__ftst_test_t)(__ftst_test*);
 
 
-# define __FTST_TEST_CASE(test_name) ftst_test_case_##test_name
+# define __FTST_TEST_CASE(test_name) __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name) #test_name
+# define __FTST_TEST_CASE_NAME_FROM_FUNC __FUNCTION__ + 17
 
 # define FTST_TEST(test_name)                    \
-void __FTST_TEST_CASE(test_name)(__ftst_test* test)
+void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 # define __FTST_SIMPLE_TEST(cond, else_funct)      \
 {                                                       \
@@ -36,7 +37,24 @@ void __FTST_TEST_CASE(test_name)(__ftst_test* test)
     }                                                   \
 }
 
-# define __FTST_EQ(cond, expected, else_funct) __FTST_SIMPLE_TEST((cond) == (expected), else_funct)
+#define __FTST_TEST_ERROR(condition, actual, expect) \
+        __ftst_test_error(__LINE__, __FTST_TEST_CASE_NAME_FROM_FUNC, \
+                    condition, actual, expect)
+
+#include "unistd.h"
+
+void    __ftst_test_error(size_t const line, char const* test_case_name,
+                            char const *condition, const char* actual, char const* expect)
+{
+    fprintf(__g_ftst_fptr.fptr, "'%s' test failed\n%d:\tFrom condition: %s, actual: %s, expected: %s\n",
+                    test_case_name, line, condition, actual, expect);
+}
+
+
+# define __FTST_EQ(cond, expected, else_funct) __FTST_SIMPLE_TEST((cond) == (expected), \
+                { char actual_value[512]; snprintf(actual_value, sizeof(actual_value), "%d", cond);       \
+                char expected_value[512]; snprintf(expected_value, sizeof(expected_value), "%d", expected);       \
+                __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
 # define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond, else_funct) 
 # define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond, else_funct)
 
@@ -53,24 +71,20 @@ void __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 # define __FTST_ERROR(error_message) __ftst_error(#error_message)
 
-void __ftst_error(char const* error_message)
+void    __ftst_error(char const* error_message)
 {
     fprintf(stderr, "ftst error | %s\n", error_message);
     exit(-1);
 }
 
 
-clock_t __ftst_start_timer() { return clock(); }
-clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
-
-
-void ftst_init(FILE *file)
+void    ftst_init(FILE *file)
 {
     __g_ftst_fptr.fptr = file;
     __g_ftst_fptr.owned = false;
 }
 
-void ftst_init_c(char const* file_name)
+void    ftst_init_c(char const* file_name)
 {
     if (file_name != NULL)
     {
@@ -82,7 +96,7 @@ void ftst_init_c(char const* file_name)
     }
 }
 
-void ftst_exit(void)
+void    ftst_exit(void)
 {
     if (__g_ftst_fptr.owned)
         fclose(__g_ftst_fptr.fptr);
@@ -93,7 +107,10 @@ void ftst_exit(void)
 
 #define FTST_RUNTEST(test_name) __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
 
-void __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
+clock_t __ftst_start_timer() { return clock(); }
+clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
+
+void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
     clock_t test_time;
     clock_t start;
