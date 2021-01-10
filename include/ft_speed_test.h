@@ -2,23 +2,20 @@
 # define FT_SPEED_TEST_H
 
 # include <time.h>
-# include <stdlib.h>
 # include <stdio.h>
 # include <stdbool.h>
-
-typedef struct {
-    FILE*       fptr;
-    char        owned;
-}               __ftst_fptr;
 
 typedef struct {
     size_t      passed;
     size_t      launched;
 }               __ftst_test;
 
-__ftst_fptr   __g_ftst_fptr;
+FILE*       __g_ftst_stream;
+FILE*       __g_ftst_table;
 typedef     void(*__ftst_test_t)(__ftst_test*);
 
+# ifdef FTST_PRETTY
+# endif
 
 # define __FTST_TEST_CASE(test_name) __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name) #test_name
@@ -44,7 +41,7 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 void    __ftst_test_error(size_t const line, char const* test_case_name,
                             char const *condition, const char* actual, char const* expect)
 {
-    fprintf(__g_ftst_fptr.fptr, "'%s' test failed\n%d:\tFrom condition: %s, actual: %s, expected: %s\n",
+    fprintf(__g_ftst_stream, "'%s' test failed\n%d:\tFrom condition: %s, actual: %s, expected: %s\n",
                     test_case_name, line, condition, actual, expect);
 }
 
@@ -79,36 +76,28 @@ void    __ftst_test_error(size_t const line, char const* test_case_name,
 # define __FTST_ERROR(error_message) __ftst_error(#error_message)
 
 void    __ftst_error(char const* error_message)
-{
-    fprintf(stderr, "ftst error | %s\n", error_message);
-    exit(-1);
-}
+{ fprintf(stderr, "ftst error | %s\n", error_message); }
 
 
-void    ftst_init(FILE *file)
+void    ftst_init(FILE *stream_output, char const* result_file_name)
 {
-    __g_ftst_fptr.fptr = file;
-    __g_ftst_fptr.owned = false;
-}
+    __g_ftst_stream = stream_output;
 
-void    ftst_init_c(char const* file_name)
-{
-    if (file_name != NULL)
+    if (result_file_name != NULL)
     {
         char file_with_exp[512];
-        snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", file_name, ".csv");
-        __g_ftst_fptr.fptr = fopen(file_with_exp, "w");
-        __g_ftst_fptr.owned = true;
-        if (__g_ftst_fptr.fptr == NULL) __FTST_ERROR(the_file_cant_be_created);
+        snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", result_file_name, ".csv");
+        __g_ftst_table = fopen(file_with_exp, "w");
+        if (__g_ftst_table == NULL) __FTST_ERROR(the_file_cant_be_created);
     }
 }
 
 void    ftst_exit(void)
 {
-    if (__g_ftst_fptr.owned)
-        fclose(__g_ftst_fptr.fptr);
-    __g_ftst_fptr.owned = false;
-    __g_ftst_fptr.fptr = NULL;
+    if (__g_ftst_table)
+        fclose(__g_ftst_table);
+    __g_ftst_table = NULL;
+    __g_ftst_stream = NULL;
 }
 
 
@@ -126,7 +115,9 @@ void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
     start = __ftst_start_timer();
     test_case(&test);
     test_time = __ftst_end_timer(start);
-    fprintf(__g_ftst_fptr.fptr, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
+    fprintf(__g_ftst_stream, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
+    if (__g_ftst_table)
+        fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
 }
 
 

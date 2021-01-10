@@ -26,7 +26,7 @@ TEST(error_test)
 
 int main()
 {
-    ftst_init(stderr);
+    ftst_init(stdout, NULL);
 
     RUNTEST(equal_test);
     RUNTEST(error_test);
