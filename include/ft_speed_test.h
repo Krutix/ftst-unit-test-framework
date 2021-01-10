@@ -44,7 +44,7 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 # define __FTST_TEST_CASE_NAME_FROM_FUNC __FUNCTION__ + 17
 
 # define FTST_TEST(test_name)                    \
-void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
+static void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 # define __FTST_SIMPLE_TEST(cond, else_funct)      \
 {                                                       \
@@ -60,7 +60,7 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
         __ftst_test_error(__LINE__, __FTST_TEST_CASE_NAME_FROM_FUNC, \
                     condition, actual, expect)
 
-void    __ftst_test_error(size_t const line, char const* test_case_name,
+static void    __ftst_test_error(size_t const line, char const* test_case_name,
                             char const *condition, const char* actual, char const* expect)
 {
     fprintf(__g_ftst_stream,
@@ -100,11 +100,11 @@ void    __ftst_test_error(size_t const line, char const* test_case_name,
 
 # define __FTST_ERROR(error_message) __ftst_error(#error_message)
 
-void    __ftst_error(char const* error_message)
+static void    __ftst_error(char const* error_message)
 { fprintf(stderr, "ftst error | %s\n", error_message); }
 
 
-void    ftst_init(FILE *stream_output, char const* result_file_name)
+static void    ftst_init(FILE *stream_output, char const* result_file_name)
 {
     __g_ftst_stream = stream_output;
 
@@ -117,7 +117,7 @@ void    ftst_init(FILE *stream_output, char const* result_file_name)
     }
 }
 
-void    ftst_exit(void)
+static void    ftst_exit(void)
 {
     if (__g_ftst_table)
         fclose(__g_ftst_table);
@@ -128,17 +128,17 @@ void    ftst_exit(void)
 
 # define FTST_RUNTEST(test_name) __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
 
-clock_t __ftst_start_timer() { return clock(); }
-clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
+static clock_t __ftst_start_timer() { return clock(); }
+static clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
 
-void    __ftst_pretty_print_start(char const* test_case_name)
+static void    __ftst_pretty_print_start(char const* test_case_name)
 {
     fprintf(__g_ftst_stream,
         __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
                                                                             test_case_name);
 }
 
-void    __ftst_pretty_print_result(char const* test_case_name, __ftst_test test, clock_t time)
+static void    __ftst_pretty_print_result(char const* test_case_name, __ftst_test test, clock_t time)
 {
     if (test.passed == test.launched)
         fprintf(__g_ftst_stream, __FTST_PRETTY_SUCCESS("[success]"));
@@ -163,12 +163,12 @@ void    __ftst_pretty_print_result(char const* test_case_name, __ftst_test test,
                             time / 1000.);
 }
 
-void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
+static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
 {
     fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, time / 1000.);
 }
 
-void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
+static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
     clock_t time;
     __ftst_test test = (__ftst_test){ 0, 0 };
