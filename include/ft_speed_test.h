@@ -9,22 +9,22 @@
 typedef struct {
     FILE*       fptr;
     char        owned;
-} ftst_fptr;
+} __ftst_fptr;
 
 typedef struct {
     size_t passed;
     size_t launched;
-} ftst_test;
+} __ftst_test;
 
-ftst_fptr   g_ftst_fptr;
-typedef     void(*ftst_test_t)(ftst_test*);
+__ftst_fptr   __g_ftst_fptr;
+typedef     void(*__ftst_test_t)(__ftst_test*);
 
 
 # define __FTST_TEST_CASE(test_name) ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name) #test_name
 
 # define FTST_TEST(test_name)                    \
-void __FTST_TEST_CASE(test_name)(ftst_test* test)
+void __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 # define __FTST_SIMPLE_TEST(cond, else_funct)      \
 {                                                       \
@@ -66,8 +66,8 @@ clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
 
 void ftst_init(FILE *file)
 {
-    g_ftst_fptr.fptr = file;
-    g_ftst_fptr.owned = false;
+    __g_ftst_fptr.fptr = file;
+    __g_ftst_fptr.owned = false;
 }
 
 void ftst_init_c(char const* file_name)
@@ -76,33 +76,33 @@ void ftst_init_c(char const* file_name)
     {
         char file_with_exp[512];
         snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", file_name, ".csv");
-        g_ftst_fptr.fptr = fopen(file_with_exp, "w");
-        g_ftst_fptr.owned = true;
-        if (g_ftst_fptr.fptr == NULL) __FTST_ERROR(the_file_cant_be_created);
+        __g_ftst_fptr.fptr = fopen(file_with_exp, "w");
+        __g_ftst_fptr.owned = true;
+        if (__g_ftst_fptr.fptr == NULL) __FTST_ERROR(the_file_cant_be_created);
     }
 }
 
 void ftst_exit(void)
 {
-    if (g_ftst_fptr.owned)
-        fclose(g_ftst_fptr.fptr);
-    g_ftst_fptr.owned = false;
-    g_ftst_fptr.fptr = NULL;
+    if (__g_ftst_fptr.owned)
+        fclose(__g_ftst_fptr.fptr);
+    __g_ftst_fptr.owned = false;
+    __g_ftst_fptr.fptr = NULL;
 }
 
 
-#define FTST_RUNTEST(test_name) ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
+#define FTST_RUNTEST(test_name) __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
 
-void ftst_run_test(ftst_test_t test_case, char const* test_case_name)
+void __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
     clock_t test_time;
     clock_t start;
-    ftst_test test = (ftst_test){ 0, 0 };
+    __ftst_test test = (__ftst_test){ 0, 0 };
 
     start = __ftst_start_timer();
     test_case(&test);
     test_time = __ftst_end_timer(start);
-    fprintf(g_ftst_fptr.fptr, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
+    fprintf(__g_ftst_fptr.fptr, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
 }
 
 
