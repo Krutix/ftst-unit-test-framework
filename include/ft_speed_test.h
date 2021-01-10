@@ -10,15 +10,31 @@ typedef struct {
     char        owned;
 } ftst_fptr;
 
+typedef struct {
+    size_t passed;
+    size_t launched;
+} ftst_test;
+
 ftst_fptr   g_ftst_fptr;
 clock_t     g_ftst_start;
-typedef     void(*ftst_test_t)(void);
+typedef     void(*ftst_test_t)(ftst_test*);
 
 # define FTST_TEST_CASE(test_name) ftst_test_case_##test_name
 # define FTST_TEST_CASE_NAME(test_name) #test_name
 
 # define FTST_TEST(test_name)                    \
-void FTST_TEST_CASE(test_name)(void)
+void FTST_TEST_CASE(test_name)(ftst_test* test)
+
+# define __FTST_EQ(cond, expected, else_funct)      \
+test->launched++;                                   \
+if ((cond) == (expected)) {                         \
+    test->passed++;                                 \
+} else {                                            \
+    else_funct;                                     \
+}
+
+# define FTST_EXPECT_EQ(cond, expected) __FTST_EQ(cond, expected, )
+# define FTST_ASSERT_EQ(cond, expected) __FTST_EQ(cond, expected, return)
 
 
 # define FTST_ERROR(error_message) ftst_error(#error_message)
@@ -66,11 +82,12 @@ void ftst_exit(void)
 void ftst_run_test(ftst_test_t test_case, char const* test_case_name)
 {
     clock_t test_time;
+    ftst_test test = (ftst_test){ 0, 0 };
 
     ftst_start_timer();
-    test_case();
+    test_case(&test);
     test_time = ftst_end_timer();
-    fprintf(g_ftst_fptr.fptr, "%s,%fms\n", test_case_name, test_time / 1000.);
+    fprintf(g_ftst_fptr.fptr, "%s,%d/%d,%fms\n", test_case_name, test.passed, test.launched, test_time / 1000.); //TODO float accur to 3
 }
 
 #endif
