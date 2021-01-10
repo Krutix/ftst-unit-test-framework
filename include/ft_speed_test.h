@@ -53,7 +53,7 @@ void    __ftst_test_error(size_t const line, char const* test_case_name,
                 __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
 
 # define __FTST_EQ_CHOOSER(_f1, _f2, _f3, ...) _f3 
-# define __FTST_CHOOSE_EQ_MACRO(...) __FTST_EQ_CHOOSER(__VA_ARGS__, __FTST_EQ_FORMAT, __FTST_EQ_DEFAULT) // TODO proper work with 1 arg (no crutched comma)
+# define __FTST_CHOOSE_EQ_MACRO(...) __FTST_EQ_CHOOSER(__VA_ARGS__, __FTST_EQ_FORMAT, __FTST_EQ_DEFAULT) /* TODO proper work with 1 arg (no crutched comma) */
 # define __FTST_EQ(cond, expected, else_funct, ...) __FTST_CHOOSE_EQ_MACRO(__VA_ARGS__)(cond, expected, else_funct, __VA_ARGS__)
 
 
