@@ -87,7 +87,7 @@ void ftst_run_test(ftst_test_t test_case, char const* test_case_name)
     ftst_start_timer();
     test_case(&test);
     test_time = ftst_end_timer();
-    fprintf(g_ftst_fptr.fptr, "%s,%d/%d,%fms\n", test_case_name, test.passed, test.launched, test_time / 1000.); //TODO float accur to 3
+    fprintf(g_ftst_fptr.fptr, "%s,%d/%d,%.3fms\n", test_case_name, test.passed, test.launched, test_time / 1000.);
 }
 
 #endif
