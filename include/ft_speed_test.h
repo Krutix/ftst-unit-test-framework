@@ -41,8 +41,6 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
         __ftst_test_error(__LINE__, __FTST_TEST_CASE_NAME_FROM_FUNC, \
                     condition, actual, expect)
 
-#include "unistd.h"
-
 void    __ftst_test_error(size_t const line, char const* test_case_name,
                             char const *condition, const char* actual, char const* expect)
 {
@@ -51,22 +49,29 @@ void    __ftst_test_error(size_t const line, char const* test_case_name,
 }
 
 
-# define __FTST_EQ(cond, expected, else_funct) __FTST_SIMPLE_TEST((cond) == (expected), \
-                { char actual_value[512]; snprintf(actual_value, sizeof(actual_value), "%d", cond);       \
-                char expected_value[512]; snprintf(expected_value, sizeof(expected_value), "%d", expected);       \
+# define __FTST_EQ_DEFAULT(cond, expected, else_funct,...) __FTST_EQ_FORMAT(cond, expected, else_funct, d)
+# define __FTST_EQ_FORMAT(cond, expected, else_funct, format,...) __FTST_SIMPLE_TEST((cond) == (expected), \
+                { char actual_value[124]; snprintf(actual_value, sizeof(actual_value), "%"#format, cond);       \
+                char expected_value[124]; snprintf(expected_value, sizeof(expected_value), "%"#format, expected);       \
                 __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
+
+# define __FTST_EQ_CHOOSER(_f1, _f2, _f3, ...) _f3 
+# define __FTST_CHOOSE_EQ_MACRO(...) __FTST_EQ_CHOOSER(__VA_ARGS__, __FTST_EQ_FORMAT, __FTST_EQ_DEFAULT) // TODO proper work with 1 arg (no crutched comma)
+# define __FTST_EQ(cond, expected, else_funct, ...) __FTST_CHOOSE_EQ_MACRO(__VA_ARGS__)(cond, expected, else_funct, __VA_ARGS__)
+
+
 # define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond,  \
                 __FTST_TEST_ERROR(#cond, "true", "false"); else_funct)
 # define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond,  \
                 __FTST_TEST_ERROR(#cond, "false", "true"); else_funct)
 
 # define __FTST_EXPECT_FUNCT 
-# define FTST_EXPECT_EQ(cond, expected) __FTST_EQ(cond, expected, __FTST_EXPECT_FUNCT)
+# define FTST_EXPECT_EQ(cond, expected, ...) __FTST_EQ(cond, expected, __FTST_EXPECT_FUNCT, __VA_ARGS__)
 # define FTST_EXPECT_TRUE(cond) __FTST_TRUE(cond, __FTST_EXPECT_FUNCT)
 # define FTST_EXPECT_FALSE(cond) __FTST_FALSE(cond, __FTST_EXPECT_FUNCT)
 
 # define __FTST_ASSERT_FUNCT return
-# define FTST_ASSERT_EQ(cond, expected) __FTST_EQ(cond, expected, __FTST_ASSERT_FUNCT)
+# define FTST_ASSERT_EQ(cond, expected, ...) __FTST_EQ(cond, expected, __FTST_ASSERT_FUNCT, __VA_ARGS__)
 # define FTST_ASSERT_TRUE(cond) __FTST_TRUE(cond, __FTST_ASSERT_FUNCT)
 # define FTST_ASSERT_FALSE(cond) __FTST_FALSE(cond, __FTST_ASSERT_FUNCT)
 

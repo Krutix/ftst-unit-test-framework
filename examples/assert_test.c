@@ -19,9 +19,9 @@ TEST(bool_test)
 
 TEST(error_test)
 {
-    EXPECT_EQ(15, 1);
-    ASSERT_EQ(2, 42);
+    EXPECT_EQ(-1llu, 1, llu,);
     EXPECT_EQ(1, 3);
+    ASSERT_EQ(2, 42);
 }
 
 int main()
