@@ -55,8 +55,10 @@ void    __ftst_test_error(size_t const line, char const* test_case_name,
                 { char actual_value[512]; snprintf(actual_value, sizeof(actual_value), "%d", cond);       \
                 char expected_value[512]; snprintf(expected_value, sizeof(expected_value), "%d", expected);       \
                 __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
-# define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond, else_funct) 
-# define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond, else_funct)
+# define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond,  \
+                __FTST_TEST_ERROR(#cond, "true", "false"); else_funct)
+# define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond,  \
+                __FTST_TEST_ERROR(#cond, "false", "true"); else_funct)
 
 # define __FTST_EXPECT_FUNCT 
 # define FTST_EXPECT_EQ(cond, expected) __FTST_EQ(cond, expected, __FTST_EXPECT_FUNCT)
