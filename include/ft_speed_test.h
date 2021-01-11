@@ -106,7 +106,7 @@ static void    __ftst_error(char const* error_message)
 { fprintf(stderr, "ftst error | %s\n", error_message); exit(-1); }
 
 
-static void    ftst_init(FILE *stream_output, char const* result_file_name)
+static void    ftst_init(FILE* stream_output, char const* result_file_name)
 {
     __g_ftst_stream = stream_output;
 
@@ -191,7 +191,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 }
 
 
-# ifdef NAMESPACE_FTST
+# ifndef NAMESPACE_FTST
 #  define EXPECT_EQ     FTST_EXPECT_EQ
 #  define EXPECT_TRUE   FTST_EXPECT_TRUE
 #  define EXPECT_FALSE  FTST_EXPECT_FALSE

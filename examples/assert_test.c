@@ -1,5 +1,4 @@
 
-#define NAMESPACE_FTST
 #include "ft_speed_test.h"
 
 TEST(equal_test)
