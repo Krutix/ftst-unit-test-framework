@@ -126,7 +126,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name,
 # define __FTST_IS_TRUE_3(cond, error_funct, format)    __FTST_IS_BOOL_REAL("true", cond, error_funct, format)
 
 # define __FTST_IS_FALSE_0()                             __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_IS_FALSE_1(cond)                         __FTST_IS_FALSE_2(cond, __FTST_EXPECT)
+# define __FTST_IS_FALSE_1(cond)                         __FTST_IS_FALSE_2(cond, FTST_EXPECT)
 # define __FTST_IS_FALSE_2(cond, error_funct)            __FTST_IS_FALSE_3(cond, error_funct, __FTST_EQ_DEFAULT_FORMAT)
 # define __FTST_IS_FALSE_3(cond, error_funct, format)    __FTST_IS_BOOL_REAL("false", !(cond), error_funct, format)
 
@@ -221,12 +221,15 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
 
 # ifndef NAMESPACE_FTST
-#  define EQ     FTST_EXPECT_EQ
+#  define EQ        FTST_EQ
 #  define IS_TRUE   FTST_IS_TRUE
 #  define IS_FALSE  FTST_IS_FALSE
 
-#  define TEST          FTST_TEST
-#  define RUNTEST       FTST_RUNTEST
+#  define EXPECT    FTST_EXPECT
+#  define ASSERT    FTST_ASSERT
+
+#  define TEST      FTST_TEST
+#  define RUNTEST   FTST_RUNTEST
 # endif
 
 #endif
