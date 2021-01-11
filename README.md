@@ -12,7 +12,7 @@ FTST это маленький header-only unit test framework для C совм
 - [ ] Compare string
 - [ ] Compare double with specific accuracy
 
-More about FTST functionality on [wiki](https://github.com/Krutix/ft_speed_test/wiki)
+**More about FTST functionality on [wiki](https://github.com/Krutix/ft_speed_test/wiki)**
 
 ## How to use
 
