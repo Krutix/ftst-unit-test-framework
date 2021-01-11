@@ -1,5 +1,5 @@
 
-#include "ft_speed_test.h"
+#include "ftst.h"
 
 TEST(equal_test)
 {
