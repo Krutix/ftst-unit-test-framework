@@ -1,11 +1,11 @@
 # FTST unit test framework
-FTST is a small header-only unit test framework for C comparable with C89 standart, developed for using in school21(42) projects
+FTST is a small header-only unit test framework for C compatible with C89 standart, developed for using in school21(42) projects
 
 FTST это маленький header-only unit test framework для C совместимый с C89 стандартом, разработанный для использования в проектах школы 21(42)
 
 ## Tips
 
-- [x] Comparable with C89
+- [x] Compatible with C89
 - [x] ASSERT AND EXCEPT
 - [x] Compare integer types
 - [x] Compare boolean types
