@@ -110,23 +110,29 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name,
                     __FTST_SNPRINTF(expect_value, FTST_BUFFER_SIZE, format, expect);     \
                     __FTST_TEST_ERROR(#cond, actual_value, expect_value); } error_funct)
 
-# define __FTST_EQ_0()                                      __FTST_FATAL_ERROR("EQ take 2 or more arguments, not 1")
-# define __FTST_EQ_1(a)                                     __FTST_FATAL_ERROR("EQ take 2 or more arguments, not 1")
+# define __FTST_EQ_0()                                      __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_EQ_1(a)                                     __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
 # define __FTST_EQ_2(expr, expect)                          __FTST_EQ_3(expr, expect, FTST_EXPECT)
 # define __FTST_EQ_3(expr, expect, error_funct)             __FTST_EQ_4(expr, expect, error_funct, __FTST_EQ_DEFAULT_FORMAT)
 # define __FTST_EQ_4(expr, expect, error_funct, format)     __FTST_EQ_REAL(expr, expect, error_funct, format)
 
+# define __FTST_IS_BOOL_REAL(expect, cond, error_funct, format) __FTST_SIMPLE_TEST(cond,  \
+                __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, cond);  \
+                __FTST_TEST_ERROR(#cond, actual_value, expect); error_funct)
 
-# define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond,  \
-                __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, cond);  \
-                __FTST_TEST_ERROR(#cond, actual_value, "false"); else_funct)
-# define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond,  \
-                __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, cond);  \
-                __FTST_TEST_ERROR(#cond, actual_value, "true"); else_funct)
+# define __FTST_IS_TRUE_0()                             __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_IS_TRUE_1(cond)                         __FTST_IS_TRUE_2(cond, FTST_EXPECT)
+# define __FTST_IS_TRUE_2(cond, error_funct)            __FTST_IS_TRUE_3(cond, error_funct, __FTST_EQ_DEFAULT_FORMAT)
+# define __FTST_IS_TRUE_3(cond, error_funct, format)    __FTST_IS_BOOL_REAL("true", cond, error_funct, format)
+
+# define __FTST_IS_FALSE_0()                             __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_IS_FALSE_1(cond)                         __FTST_IS_FALSE_2(cond, __FTST_EXPECT)
+# define __FTST_IS_FALSE_2(cond, error_funct)            __FTST_IS_FALSE_3(cond, error_funct, __FTST_EQ_DEFAULT_FORMAT)
+# define __FTST_IS_FALSE_3(cond, error_funct, format)    __FTST_IS_BOOL_REAL("false", !(cond), error_funct, format)
 
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_EQ, __VA_ARGS__)
-# define FTST_IS_TRUE(cond)     __FTST_TRUE(cond, __FTST_EXPECT_FUNCT)
-# define FTST_IS_FALSE(cond)    __FTST_FALSE(cond, __FTST_EXPECT_FUNCT)
+# define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_IS_TRUE, __VA_ARGS__)
+# define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_IS_FALSE, __VA_ARGS__)
 
 
 static void    ftst_init(FILE* stream_output, char const* result_file_name)
@@ -215,13 +221,9 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
 
 # ifndef NAMESPACE_FTST
-#  define EXPECT_EQ     FTST_EXPECT_EQ
-#  define EXPECT_TRUE   FTST_EXPECT_TRUE
-#  define EXPECT_FALSE  FTST_EXPECT_FALSE
-
-#  define ASSERT_EQ     FTST_ASSERT_EQ
-#  define ASSERT_TRUE   FTST_ASSERT_TRUE
-#  define ASSERT_FALSE  FTST_ASSERT_FALSE
+#  define EQ     FTST_EXPECT_EQ
+#  define IS_TRUE   FTST_IS_TRUE
+#  define IS_FALSE  FTST_IS_FALSE
 
 #  define TEST          FTST_TEST
 #  define RUNTEST       FTST_RUNTEST
