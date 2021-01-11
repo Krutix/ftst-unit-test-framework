@@ -44,16 +44,36 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
 # define __FTST_TEST_CASE_NAME_FROM_FUNC    __FUNCTION__ + 17
 
+# define __FTST_FATAL_ERROR(error_message)          __ftst_fatal_error(__LINE__, __FUNCTION__, error_message)
+# define __FTST_FATAL_CASE_ERROR(error_message)     __ftst_fatal_error(__LINE__, "test "__FTST_TEST_CASE_NAME_FROM_FUNC, error_message)
+
+static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
+{ fprintf(stderr,
+        "ftst error\n" \
+        "%d: [%s] \n", line, function_name, error_message); exit(-1); }
+
+/* MULTI MACRO */
+/* allow to use same name for macro with different number of args */
+#define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
+#define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
+#define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__, \
+            F##_16, F##_15, F##_14, F##_13, F##_12, F##_11, F##_10, F##_9, F##_8,\
+            F##_7, F##_6, F##_5, F##_4, F##_3, F##_2, F##_1, ))
+#define __FTST_NO_ARG_EXPANDER(FUNC) ,,,,,,,,,,,,,,,,FUNC ## _0
+#define __FTST_MACRO_CHOOSER(FUNC, ...) __FTST_CHOOSE_FROM_ARG_COUNT(FUNC, __FTST_NO_ARG_EXPANDER __VA_ARGS__ (FUNC))
+#define __FTST_MULTI_MACRO(FUNC, ...) __FTST_MACRO_CHOOSER(FUNC, __VA_ARGS__)(__VA_ARGS__)
+
+
 # define FTST_TEST(test_name)                    \
 void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
-# define __FTST_SIMPLE_TEST(cond, else_funct)      \
+# define __FTST_SIMPLE_TEST(cond, error_funct)      \
 {                                                       \
     test->launched++;                                   \
     if (cond) {                                         \
         test->passed++;                                 \
     } else {                                            \
-        else_funct;                                     \
+        error_funct;                                    \
     }                                                   \
 }
 
@@ -73,15 +93,21 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name,
 }
 
 
-# define __FTST_EQ_DEFAULT(cond, expected, else_funct,...) __FTST_EQ_FORMAT(cond, expected, else_funct, d)
-# define __FTST_EQ_FORMAT(cond, expected, else_funct, format,...) __FTST_SIMPLE_TEST((cond) == (expected), \
-                { char actual_value[128];   snprintf(actual_value,   sizeof(actual_value),   "%"#format, cond);       \
-                  char expected_value[128]; snprintf(expected_value, sizeof(expected_value), "%"#format, expected);       \
-                __FTST_TEST_ERROR(#cond, actual_value, expected_value); } else_funct)
+# define FTST_EXPECT
+# define FTST_ASSERT return;
 
-# define __FTST_EQ_CHOOSER(_f1, _f2, _f3, ...) _f3 
-# define __FTST_CHOOSE_EQ_MACRO(...) __FTST_EQ_CHOOSER(__VA_ARGS__, __FTST_EQ_FORMAT, __FTST_EQ_DEFAULT) /* TODO proper work with 1 arg (no crutched comma) */
-# define __FTST_EQ(cond, expected, else_funct, ...) __FTST_CHOOSE_EQ_MACRO(__VA_ARGS__)(cond, expected, else_funct, __VA_ARGS__)
+# define __FTST_EQ_DEFAULT_FORMAT "d"
+# define __FTST_EQ_REAL(cond, expect, error_funct, format) __FTST_SIMPLE_TEST((cond) == (expect), \
+                { char actual_value[128];   snprintf(actual_value,   sizeof(actual_value),   "%"format, cond);       \
+                  char expected_value[128]; snprintf(expected_value, sizeof(expected_value), "%"format, expect);       \
+                __FTST_TEST_ERROR(#cond, actual_value, expected_value); } error_funct)
+
+# define __FTST_EQ_0()                                      __FTST_FATAL_ERROR("EQ take 2 or more arguments, not 1")
+# define __FTST_EQ_1(a)                                     __FTST_FATAL_ERROR("EQ take 2 or more arguments, not 1")
+# define __FTST_EQ_2(expr, expect)                          __FTST_EQ_3(expr, expect, FTST_EXPECT)
+# define __FTST_EQ_3(expr, expect, error_funct)             __FTST_EQ_4(expr, expect, error_funct, __FTST_EQ_DEFAULT_FORMAT)
+# define __FTST_EQ_4(expr, expect, error_funct, format)     __FTST_EQ_REAL(expr, expect, error_funct, format)
+
 
 
 # define __FTST_FALSE(cond, else_funct) __FTST_SIMPLE_TEST(!cond,  \
@@ -89,21 +115,9 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name,
 # define __FTST_TRUE(cond, else_funct) __FTST_SIMPLE_TEST(cond,  \
                 __FTST_TEST_ERROR(#cond, "false", "true"); else_funct)
 
-# define __FTST_EXPECT_FUNCT 
-# define FTST_EXPECT_EQ(cond, expected, ...) __FTST_EQ(cond, expected, __FTST_EXPECT_FUNCT, __VA_ARGS__)
-# define FTST_EXPECT_TRUE(cond) __FTST_TRUE(cond, __FTST_EXPECT_FUNCT)
-# define FTST_EXPECT_FALSE(cond) __FTST_FALSE(cond, __FTST_EXPECT_FUNCT)
-
-# define __FTST_ASSERT_FUNCT return
-# define FTST_ASSERT_EQ(cond, expected, ...) __FTST_EQ(cond, expected, __FTST_ASSERT_FUNCT, __VA_ARGS__)
-# define FTST_ASSERT_TRUE(cond) __FTST_TRUE(cond, __FTST_ASSERT_FUNCT)
-# define FTST_ASSERT_FALSE(cond) __FTST_FALSE(cond, __FTST_ASSERT_FUNCT)
-
-
-# define __FTST_ERROR(error_message) __ftst_error(#error_message)
-
-static void    __ftst_error(char const* error_message)
-{ fprintf(stderr, "ftst error | %s\n", error_message); exit(-1); }
+# define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_EQ, __VA_ARGS__)
+# define FTST_IS_TRUE(cond)     __FTST_TRUE(cond, __FTST_EXPECT_FUNCT)
+# define FTST_IS_FALSE(cond)    __FTST_FALSE(cond, __FTST_EXPECT_FUNCT)
 
 
 static void    ftst_init(FILE* stream_output, char const* result_file_name)
@@ -115,7 +129,7 @@ static void    ftst_init(FILE* stream_output, char const* result_file_name)
         char file_with_exp[512];
         snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", result_file_name, ".csv");
         __g_ftst_table = fopen(file_with_exp, "w");
-        if (__g_ftst_table == NULL) __FTST_ERROR(the_file_cant_be_created);
+        if (__g_ftst_table == NULL) __FTST_FATAL_ERROR("The file cant be created");
     }
 }
 
