@@ -17,6 +17,7 @@ FTST это маленький header-only unit test framework для C совм
 ## How to use
 
 ### Start to use
+[More about getting started with FTST](https://github.com/Krutix/ft_speed_test/wiki/Start-with-FTST)
 FTST is header-only framework, all nead to do it's create .c file and include ftst.h. Then create test with TEST(*test name*) macro. For run tests create main function whick run ftst_init, RUN_TEST(*test name*) and ftst_exit when all tests are finished. Its may be look like this:
 
 FTST это header-only framework, все что нужно это создать .с файл и подключить ftst.h. Затем создать тест с помощью TEST(*название теста*) макро. Для запуска тестов необходимо создать функцию main, котора запускает ftst_init, RUN_TEST(*название теста*) и ftst_exit когда все тесты завершены. Это может выглядеть вот так:
