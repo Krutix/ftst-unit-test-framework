@@ -44,7 +44,7 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 # define __FTST_TEST_CASE_NAME_FROM_FUNC __FUNCTION__ + 17
 
 # define FTST_TEST(test_name)                    \
-static void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
+void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 # define __FTST_SIMPLE_TEST(cond, else_funct)      \
 {                                                       \
