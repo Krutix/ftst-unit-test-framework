@@ -6,6 +6,23 @@
 # include <stdio.h>
 # include <stdbool.h>
 
+/* Default value settings */
+# ifndef        FTST_NO_COLOR
+#  define       FTST_NO_COLOR       false
+# endif
+
+# ifndef        FTST_NAMESPACE 
+#  define       FTST_NAMESPACE      true
+# endif
+
+# ifndef        FTST_ERROR_MESSAGE
+#  define       FTST_ERROR_MESSAGE  true
+# endif
+
+# if !defined(FTST_BUFFER_SIZE) || FTST_BUFFER_SIZE < 1
+#  define       FTST_BUFFER_SIZE 128
+# endif
+
 typedef struct {
     size_t      passed;
     size_t      launched;
@@ -13,9 +30,13 @@ typedef struct {
 
 FILE*       __g_ftst_stream;
 FILE*       __g_ftst_table;
+
+# define __FTST_IS_STREAM     (__g_ftst_stream != NULL)
+# define __FTST_IS_TABLE      (__g_ftst_table  != NULL)
+
 typedef     void(*__ftst_test_t)(__ftst_test*);
 
-# ifdef FTST_NO_COLOR
+# if FTST_NO_COLOR
 #  define __FTST_ANSI_COLOR_RED
 #  define __FTST_ANSI_COLOR_GREEN
 #  define __FTST_ANSI_COLOR_YELLOW
@@ -48,9 +69,12 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 # define __FTST_FATAL_CASE_ERROR(error_message)     __ftst_fatal_error(__LINE__, "test "__FTST_TEST_CASE_NAME_FROM_FUNC, error_message)
 
 static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
-{ fprintf(stderr,
+{
+    fprintf(stderr,
         "ftst error\n" \
-        "%d: [%s] \n", line, function_name, error_message); exit(-1); }
+        "%d: [%s] \n", line, function_name, error_message);
+    exit(-1);
+}
 
 /* MULTI MACRO */
 /* allow to use same name for macro with different number of args */
@@ -84,22 +108,22 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 static void    __ftst_test_error(size_t const line, char const* test_case_name,
                             char const *condition, const char* actual, char const* expect)
 {
-    fprintf(__g_ftst_stream,
-        "'%s' test " __FTST_PRETTY_FAILED("[failed]") \
-        "\n%d:\tFrom condition:  " __FTST_PRETTY_INFO("%s") \
-        ",   actual:  " __FTST_PRETTY_INFO("%s") \
-        ",   expected:  " __FTST_PRETTY_INFO("%s\n"),
-            test_case_name, line, condition, actual, expect);
+    if (__FTST_IS_STREAM && FTST_ERROR_MESSAGE)
+    {
+        fprintf(__g_ftst_stream,
+            "'%s' test " __FTST_PRETTY_FAILED("[failed]") \
+            "\n%d:\tFrom condition:  " __FTST_PRETTY_INFO("%s") \
+            ",   actual:  " __FTST_PRETTY_INFO("%s") \
+            ",   expected:  " __FTST_PRETTY_INFO("%s\n"),
+                test_case_name, line, condition, actual, expect);
+    }
 }
 
 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
-# ifndef FTST_BUFFER_SIZE
-#  define FTST_BUFFER_SIZE 128
-# endif
-
+/* TODO remove auto "%" on format str */
 # define __FTST_SNPRINTF(name, size, format, value) \
                     char name[size]; \
                     snprintf(name, sizeof(name), "%"format, value);
@@ -150,7 +174,7 @@ static void    ftst_init(FILE* stream_output, char const* result_file_name)
 
 static void    ftst_exit(void)
 {
-    if (__g_ftst_table)
+    if (__FTST_IS_TABLE)
         fclose(__g_ftst_table);
     __g_ftst_table = NULL;
     __g_ftst_stream = NULL;
@@ -165,41 +189,48 @@ static clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
 
 static void    __ftst_pretty_print_start(char const* test_case_name)
 {
-    fprintf(__g_ftst_stream,
-        __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
+    if (__FTST_IS_STREAM)
+        fprintf(__g_ftst_stream,
+            __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
                                                                             test_case_name);
 }
 
 static void    __ftst_pretty_print_result( \
         char const* test_case_name, __ftst_test test, clock_t time)
 {
-    if (test.passed == test.launched)
-        fprintf(__g_ftst_stream, __FTST_PRETTY_SUCCESS("[success]"));
-    else
-        fprintf(__g_ftst_stream, __FTST_PRETTY_FAILED("[failed]"));
+    if (__FTST_IS_STREAM)
+    {
+        if (test.passed == test.launched)
+            fprintf(__g_ftst_stream, __FTST_PRETTY_SUCCESS("[success]"));
+        else
+            fprintf(__g_ftst_stream, __FTST_PRETTY_FAILED("[failed]"));
 
-    fprintf(__g_ftst_stream,
-        " : " __FTST_PRETTY_TEST_CASE_NAME("%s") " | ",
-                                    test_case_name);
-
-    if (test.passed == test.launched)
         fprintf(__g_ftst_stream,
-            __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
-                                test.passed,                   test.launched);
-    else
-        fprintf(__g_ftst_stream,
-            __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
-                                test.passed,                   test.launched);
+            " : " __FTST_PRETTY_TEST_CASE_NAME("%s") " | ",
+                                        test_case_name);
 
-    fprintf(__g_ftst_stream,
-        " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
-                            time / 1000.);
+        if (test.passed == test.launched)
+            fprintf(__g_ftst_stream,
+                __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                    test.passed,                   test.launched);
+        else
+            fprintf(__g_ftst_stream,
+                __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                    test.passed,                   test.launched);
+
+        fprintf(__g_ftst_stream,
+            " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
+                                time / 1000.);
+    }
 }
 
 static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
 {
-    fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n",
-        test_case_name, test.passed, test.launched, time / 1000.);
+    if (__FTST_IS_TABLE)
+    {
+        fprintf(__g_ftst_table, "%s,%d/%d,%.3fms\n",
+            test_case_name, test.passed, test.launched, time / 1000.);
+    }
 }
 
 static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
@@ -215,12 +246,11 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
     __ftst_pretty_print_result(test_case_name, test, time);
 
-    if (__g_ftst_table)
-        __ftst_pretty_print_table(test_case_name, test, time);
+    __ftst_pretty_print_table(test_case_name, test, time);
 }
 
 
-# ifndef NAMESPACE_FTST
+# if FTST_NAMESPACE
 #  define EQ        FTST_EQ
 #  define IS_TRUE   FTST_IS_TRUE
 #  define IS_FALSE  FTST_IS_FALSE
