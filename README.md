@@ -4,20 +4,21 @@ FTST is a small header-only unit test framework for C compatible with C89 standa
 FTST это маленький header-only unit test framework для C совместимый с C89 стандартом, разработанный для использования в проектах школы 21(42)
 
 ## Tips
-
 - [x] Compatible with C89
-- [x] ASSERT AND EXCEPT
 - [x] Compare integer types
-- [x] Compare boolean types
+- [x] Compare boolean
+- [x] ASSERT and EXCEPT
+- [x] Unreadeble source on macro magic
 - [ ] Compare string
-- [ ] Compare double with specific accuracy
+- [ ] Compare with specific accuracy
+- [ ] Less, More, LessEqual, etc
+- [ ] Error custom comments
+- [ ] Allocation fail check
 
 **More about FTST functionality on [wiki](https://github.com/Krutix/ft_speed_test/wiki)**
 
-## How to use
-
-### Start to use
-[More about getting started with FTST](https://github.com/Krutix/ft_speed_test/wiki/Start-with-FTST)
+## Getting started
+**More about getting started with FTST on [wiki](https://github.com/Krutix/ft_speed_test/wiki/Start-with-FTST)**
 
 FTST is header-only framework, all nead to do it's create .c file and include ftst.h. Then create test with TEST(*test name*) macro. For run tests create main function whick run ftst_init, RUN_TEST(*test name*) and ftst_exit when all tests are finished. Its may be look like this:
 
@@ -26,7 +27,7 @@ FTST это header-only framework, все что нужно это создат�
 #include "ftst.h"
 TEST(my_test)
 {
-    EXPECT_EQ(1, 1);
+    EQ(1, 1);
 }
 
 int main()
