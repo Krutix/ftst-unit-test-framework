@@ -63,6 +63,14 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 #define __FTST_MACRO_CHOOSER(FUNC, ...) __FTST_CHOOSE_FROM_ARG_COUNT(FUNC, __FTST_NO_ARG_EXPANDER __VA_ARGS__ (FUNC))
 #define __FTST_MULTI_MACRO(FUNC, ...) __FTST_MACRO_CHOOSER(FUNC, __VA_ARGS__)(__VA_ARGS__)
 
+# ifndef FTST_BUFFER_SIZE
+#  define FTST_BUFFER_SIZE 128
+# endif
+
+# define __FTST_SNPRINTF(name, size, format, value) \
+                    char name[size]; \
+                    snprintf(name, sizeof(name), "%"format, value);
+
 
 # define FTST_TEST(test_name)                    \
 void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
@@ -77,48 +85,37 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
     }                                                   \
 }
 
-#define __FTST_TEST_ERROR(condition, actual, expect) \
+#define __FTST_TEST_ERROR(test_name, actual, actual_value, expect) \
         __ftst_test_error(__LINE__, __FTST_TEST_CASE_NAME_FROM_FUNC, \
-                    condition, actual, expect)
+                    test_name, actual, actual_value, expect)
 
-static void    __ftst_test_error(size_t const line, char const* test_case_name,
-                            char const *condition, const char* actual, char const* expect)
+/*TODO think about naming expression, condition etc*/
+static void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
+                            char const *actual, const char* actual_value, char const* expect)
 {
     fprintf(__g_ftst_stream,
-        "'%s' test " __FTST_PRETTY_FAILED("[failed]") \
-        "\n%d:\tFrom condition:  " __FTST_PRETTY_INFO("%s") \
-        ",   actual:  " __FTST_PRETTY_INFO("%s") \
-        ",   expected:  " __FTST_PRETTY_INFO("%s\n"),
-            test_case_name, line, condition, actual, expect);
+        "%s test from '%s'" __FTST_PRETTY_FAILED("[failed]") \
+        "\n%d:\tFrom condition: " __FTST_PRETTY_INFO("%s") \
+        ",   actual: " __FTST_PRETTY_INFO("%s") \
+        ",   expected: " __FTST_PRETTY_INFO("%s\n"),
+            test_name, test_case_name, line, actual, actual_value, expect);
 }
+
+# define __FTST_SIMPLE_TEST_CREATER(test_name, actual, expect_value, expression, error_funct, format) \
+        __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, actual) \
+        __FTST_SIMPLE_TEST(expression, __FTST_TEST_ERROR(test_name, #actual, actual_value, expect_value))
 
 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
-# ifndef FTST_BUFFER_SIZE
-#  define FTST_BUFFER_SIZE 128
-# endif
-
-# define __FTST_SNPRINTF(name, size, format, value) \
-                    char name[size]; \
-                    snprintf(name, sizeof(name), "%"format, value);
-
 # define __FTST_EQ_DEFAULT_FORMAT "d"
-# define __FTST_EQ_REAL(cond, expect, error_funct, format) __FTST_SIMPLE_TEST((cond) == (expect), \
-                {   __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, cond);       \
-                    __FTST_SNPRINTF(expect_value, FTST_BUFFER_SIZE, format, expect);     \
-                    __FTST_TEST_ERROR(#cond, actual_value, expect_value); } error_funct)
 
 # define __FTST_EQ_0()                                      __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 # define __FTST_EQ_1(a)                                     __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
 # define __FTST_EQ_2(expr, expect)                          __FTST_EQ_3(expr, expect, FTST_EXPECT)
 # define __FTST_EQ_3(expr, expect, error_funct)             __FTST_EQ_4(expr, expect, error_funct, __FTST_EQ_DEFAULT_FORMAT)
 # define __FTST_EQ_4(expr, expect, error_funct, format)     __FTST_EQ_REAL(expr, expect, error_funct, format)
-
-# define __FTST_IS_BOOL_REAL(expect, cond, error_funct, format) __FTST_SIMPLE_TEST(cond,  \
-                __FTST_SNPRINTF(actual_value, FTST_BUFFER_SIZE, format, cond);  \
-                __FTST_TEST_ERROR(#cond, actual_value, expect); error_funct)
 
 # define __FTST_IS_TRUE_0()                             __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
 # define __FTST_IS_TRUE_1(cond)                         __FTST_IS_TRUE_2(cond, FTST_EXPECT)
