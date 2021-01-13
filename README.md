@@ -11,6 +11,7 @@ FTST это маленький header-only unit test framework для C совм
 - [x] Unreadeble source on macro magic
 - [ ] Compare string
 - [ ] Compare with specific accuracy
+- [ ] Launch block of tests
 - [ ] Less, More, LessEqual, etc
 - [ ] Error custom comments
 - [ ] Allocation fail check
