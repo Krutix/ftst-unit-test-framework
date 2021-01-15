@@ -14,15 +14,15 @@ TEST(boolean_test)
     IS_FALSE(false);
     IS_TRUE(15 == 0);
     IS_FALSE(15 == 0);
-    IS_FALSE(-1u, ASSERT, "u");
+    IS_FALSE(-1u, ASSERT, u);
     IS_TRUE(true);
 }
 
 TEST(error_test)
 {
     EQ(-1, 1);
-    EQ(-1llu, 1llu, EXPECT, "llu");
-    EQ(-1llu, 1llu, ASSERT, "llu");
+    EQ(-1llu, 1llu, EXPECT, llu, llu);
+    EQ(-1llu, 1llu, ASSERT, llu);
     EQ(-1, 1);
 }
 
