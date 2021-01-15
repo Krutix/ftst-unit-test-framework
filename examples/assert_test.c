@@ -20,6 +20,12 @@ TEST(boolean_test)
     IS_TRUE(true);
 }
 
+TEST(string_cmp)
+{
+    STR_EQ("hello world", "hello world");
+    STR_NE("hello worlb", "hello world");
+}
+
 TEST(error_test)
 {
     EQ(-1, 1);
@@ -36,6 +42,7 @@ int main()
 
     RUNTEST(equal_test);
     RUNTEST(boolean_test);
+    RUNTEST(string_cmp);
     RUNTEST(error_test);
 
     ftst_exit();

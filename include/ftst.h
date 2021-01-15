@@ -64,6 +64,14 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 #  define LESSEQ    FTST_LESSEQ
 #  define MORE      FTST_MORE
 #  define MOREEQ    FTST_MOREEQ
+
+#  define STR_EQ     FTST_STR_EQ
+#  define STR_NE     FTST_STR_NE
+#  define STR_LESS   FTST_STR_LESS
+#  define STR_LESSEQ FTST_STR_LESSEQ
+#  define STR_MORE   FTST_STR_MORE
+#  define STR_MOREEQ FTST_STR_MOREEQ
+
 #  define IS_TRUE   FTST_IS_TRUE
 #  define IS_FALSE  FTST_IS_FALSE
 
@@ -184,6 +192,15 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
+# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct)                    \
+        {                                                                                                   \
+            char const* actual_v = actual;                                                   \
+            char const* expect_v = expect;                                                   \
+            __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                     \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v);        \
+                            error_funct)                                                                    \
+        }
+
 # define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, t_actual, t_expect)                    \
         {                                                                                                   \
             __FTST_GET_TYPE(t_actual) actual_v = actual;                                                   \
@@ -203,6 +220,12 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
                             __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);        \
                             error_funct)                                                                    \
         }
+
+# define __FTST_STR_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_STR_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_STR_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
+# define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
+# define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
 
 # define __FTST_TWO_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 # define __FTST_TWO_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
@@ -225,6 +248,14 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_LESSEQ(...)       __FTST_MULTI_MACRO(__FTST_TWO_CMP, <=, __VA_ARGS__)
 # define FTST_MORE(...)         __FTST_MULTI_MACRO(__FTST_TWO_CMP, > , __VA_ARGS__)
 # define FTST_MOREEQ(...)       __FTST_MULTI_MACRO(__FTST_TWO_CMP, >=, __VA_ARGS__)
+
+# define FTST_STR_EQ(...)        __FTST_MULTI_MACRO(__FTST_STR_CMP, ==, __VA_ARGS__)
+# define FTST_STR_NE(...)        __FTST_MULTI_MACRO(__FTST_STR_CMP, !=, __VA_ARGS__)
+# define FTST_STR_LESS(...)      __FTST_MULTI_MACRO(__FTST_STR_CMP, < , __VA_ARGS__)
+# define FTST_STR_LESSEQ(...)    __FTST_MULTI_MACRO(__FTST_STR_CMP, <=, __VA_ARGS__)
+# define FTST_STR_MORE(...)      __FTST_MULTI_MACRO(__FTST_STR_CMP, > , __VA_ARGS__)
+# define FTST_STR_MOREEQ(...)    __FTST_MULTI_MACRO(__FTST_STR_CMP, >=, __VA_ARGS__)
+
 # define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
 
