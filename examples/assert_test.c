@@ -23,7 +23,7 @@ TEST(boolean_test)
 TEST(error_test)
 {
     EQ(-1, 1);
-    EQ(-1llu, 1llu, EXPECT, llu, llu);
+    EQ(-1llu, -1llu, EXPECT, llu, lld);
     LESS(-1llu, 1llu, EXPECT, llu);
     LESSEQ(-1llu, 1llu, EXPECT, llu);
     EQ(-1llu, 1llu, ASSERT, llu);
