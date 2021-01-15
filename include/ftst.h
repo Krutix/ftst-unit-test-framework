@@ -60,12 +60,15 @@ typedef     void(*__ftst_test_t)(__ftst_test*);
 # define __FTST_TEST_CASE_NAME_FROM_FUNC    __FUNCTION__ + 17
 
 # define __FTST_FATAL_ERROR(error_message)          __ftst_fatal_error(__LINE__, __FUNCTION__, error_message)
-# define __FTST_FATAL_CASE_ERROR(error_message)     __ftst_fatal_error(__LINE__, "test "__FTST_TEST_CASE_NAME_FROM_FUNC, error_message)
+# define __FTST_FATAL_CASE_ERROR(error_message)     __ftst_fatal_error(__LINE__, __g_ftst_current_test, error_message)
 
 static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
-{ fprintf(stderr,
+{       
+    fprintf(stderr,
         "ftst error\n" \
-        "%d: [%s] \n", line, function_name, error_message); exit(-1); }
+        "%d: [%s] \n", line, function_name, error_message);
+    exit(-1);
+}
 
 /* MULTI MACRO */
 /* allow to use same name for macro with different number of args */
@@ -121,18 +124,23 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
 
 #define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
         __ftst_test_error(__LINE__, __g_ftst_current_test, \
-                    test_name, actual, actual_str, expect)
+                    test_name, actual, actual_str, expect, expect_str)
 
 /*TODO think about naming expression, condition etc*/
 static void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect)
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value)
 {
     fprintf(__g_ftst_stream,
-        "[%s] test from '%s'" __FTST_PRETTY_FAILED("[failed]") \
-        "\n%d:\tFrom condition: " __FTST_PRETTY_INFO("%s") \
-        ",   actual: " __FTST_PRETTY_INFO("%s") \
-        ",   expected: " __FTST_PRETTY_INFO("%s\n"),
-            test_name, test_case_name, line, actual, actual_value, expect);
+        "[%s] test from '%s' " __FTST_PRETTY_FAILED("[failed]") \
+        "\n%d:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
+            test_name, test_case_name, line, actual_value, actual);
+    if (expect != NULL)
+    {
+        fprintf(__g_ftst_stream,
+            ",   expected: " __FTST_PRETTY_INFO("%s")"[%s]",
+            expect_value, expect);
+    }
+    fprintf(__g_ftst_stream, "\n");
 }
 
 
