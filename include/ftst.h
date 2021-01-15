@@ -131,7 +131,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
                             char const *actual, const char* actual_value, char const* expect, char const* expect_value)
 {
     fprintf(__g_ftst_stream,
-        "[%s] test from '%s' " __FTST_PRETTY_FAILED("[failed]") \
+        "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
         "\n%d:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
             test_name, test_case_name, line, actual_value, actual);
     if (expect != NULL)
@@ -158,6 +158,15 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
                             error_funct)                                                                    \
         }
 
+# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, t_actual)                    \
+        {                                                                                                   \
+            __FTST_GET_TYPE(t_actual) actual_v = actual;                                                   \
+            __FTST_SIMPLE_TEST(operation(actual_v),                                                 \
+                            __FTST_SNPRINTF(actual_str, FTST_BUFFER_SIZE, "%"#t_actual, actual_v);          \
+                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);        \
+                            error_funct)                                                                    \
+        }
+
 # define __FTST_TWO_CMP_0()                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 # define __FTST_TWO_CMP_1(a)                                                         __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 # define __FTST_TWO_CMP_2(a, b)                                                      __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
@@ -166,19 +175,16 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define __FTST_TWO_CMP_5(operator, actual, expect, error_funct, type)               __FTST_TWO_CMP_6(operator, actual, expect, error_funct, type, type)
 # define __FTST_TWO_CMP_6(operator, actual, expect, error_funct, t_actual, t_expect) __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, t_actual, t_expect)
 
-# define __FTST_IS_TRUE_0()                                         __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_IS_TRUE_1(cond)                                     __FTST_IS_TRUE_2(cond, FTST_EXPECT)
-# define __FTST_IS_TRUE_2(cond, error_funct)                        __FTST_IS_TRUE_3(cond, error_funct, __FTST_EQ_DEFAULT_FORMAT)
-# define __FTST_IS_TRUE_3(cond, error_funct, format)                __FTST_IS_BOOL_REAL("true", cond, error_funct, format)
-
-# define __FTST_IS_FALSE_0()                                        __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_IS_FALSE_1(cond)                                    __FTST_IS_FALSE_2(cond, FTST_EXPECT)
-# define __FTST_IS_FALSE_2(cond, error_funct)                       __FTST_IS_FALSE_3(cond, error_funct, __FTST_EQ_DEFAULT_FORMAT)
-# define __FTST_IS_FALSE_3(cond, error_funct, format)               __FTST_IS_BOOL_REAL("false", !(cond), error_funct, format)
+# define __FTST_ONE_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, FTST_EXPECT)
+# define __FTST_ONE_CMP_4(operator, name, actual, error_funct)                        __FTST_ONE_CMP_5(operator, name, actual, error_funct, __FTST_EQ_DEFAULT_TYPE)
+# define __FTST_ONE_CMP_5(operator, name, actual, error_funct, type)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
 
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, ==, __VA_ARGS__)
-# define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_IS_TRUE, __VA_ARGS__)
-# define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_IS_FALSE, __VA_ARGS__)
+# define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
+# define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
 
 
 static void    ftst_init(FILE* stream_output, char const* result_file_name)

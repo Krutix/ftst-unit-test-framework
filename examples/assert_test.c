@@ -8,15 +8,15 @@ TEST(equal_test)
     EQ(0., 0.);
 }
 
-/*TEST(boolean_test)
+TEST(boolean_test)
 {
     IS_TRUE(true);
     IS_FALSE(false);
     IS_TRUE(15 == 0);
     IS_FALSE(15 == 0);
-    IS_FALSE(-1u, ASSERT, "u");
+    IS_FALSE(-1u, ASSERT, u);
     IS_TRUE(true);
-}*/
+}
 
 TEST(error_test)
 {
@@ -31,7 +31,7 @@ int main()
     ftst_init(stdout, NULL);
 
     RUNTEST(equal_test);
-    /*RUNTEST(boolean_test);*/
+    RUNTEST(boolean_test);
     RUNTEST(error_test);
 
     ftst_exit();
