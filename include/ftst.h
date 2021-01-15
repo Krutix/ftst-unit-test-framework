@@ -19,8 +19,8 @@
 #  define       FTST_ERROR_MESSAGE  true
 # endif
 
-# if !defined(FTST_BUFFER_SIZE) || FTST_BUFFER_SIZE < 1
-#  define       FTST_BUFFER_SIZE 128
+# if !defined(FTST_VAR_STR_BUFFER) || FTST_VAR_STR_BUFFER < 1
+#  define       FTST_VAR_STR_BUFFER 128
 # endif
 
 typedef struct {
@@ -193,32 +193,32 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
-# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct)                    \
+# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct)                                        \
         {                                                                                                   \
-            char const* actual_v = actual;                                                   \
-            char const* expect_v = expect;                                                   \
-            __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                     \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v);        \
+            char const* actual_v = actual;                                                                  \
+            char const* expect_v = expect;                                                                  \
+            __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                      \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v);            \
                             error_funct)                                                                    \
         }
 
 # define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, t_actual, t_expect)                    \
         {                                                                                                   \
-            __FTST_GET_TYPE(t_actual) actual_v = actual;                                                   \
-            __FTST_GET_TYPE(t_expect) expect_v = expect;                                                   \
+            __FTST_GET_TYPE(t_actual) actual_v = actual;                                                    \
+            __FTST_GET_TYPE(t_expect) expect_v = expect;                                                    \
             __FTST_SIMPLE_TEST(actual_v operation expect_v,                                                 \
-                            __FTST_SNPRINTF(actual_str, FTST_BUFFER_SIZE, "%"#t_actual, actual_v);          \
-                            __FTST_SNPRINTF(expect_str, FTST_BUFFER_SIZE, "%"#t_expect, expect_v);          \
+                            __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#t_actual, actual_v);       \
+                            __FTST_SNPRINTF(expect_str, FTST_VAR_STR_BUFFER, "%"#t_expect, expect_v);       \
                             __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str);        \
                             error_funct)                                                                    \
         }
 
-# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, t_actual)                    \
+# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, t_actual)                                \
         {                                                                                                   \
-            __FTST_GET_TYPE(t_actual) actual_v = actual;                                                   \
-            __FTST_SIMPLE_TEST(operation(actual_v),                                                 \
-                            __FTST_SNPRINTF(actual_str, FTST_BUFFER_SIZE, "%"#t_actual, actual_v);          \
-                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);        \
+            __FTST_GET_TYPE(t_actual) actual_v = actual;                                                    \
+            __FTST_SIMPLE_TEST(operation(actual_v),                                                         \
+                            __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#t_actual, actual_v);       \
+                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);                       \
                             error_funct)                                                                    \
         }
 
