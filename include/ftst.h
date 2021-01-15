@@ -30,13 +30,14 @@ typedef struct {
 
 FILE*       __g_ftst_stream;
 FILE*       __g_ftst_table;
+__ftst_test __g_ftst_test_results;
 
 # define __FTST_IS_STREAM     (__g_ftst_stream != NULL)
 # define __FTST_IS_TABLE      (__g_ftst_table  != NULL)
 
 char const* __g_ftst_current_test;
 
-typedef     void(*__ftst_test_t)(__ftst_test*);
+typedef     void(*__ftst_test_t)();
 
 # if FTST_NO_COLOR
 #  define __FTST_ANSI_COLOR_RED
@@ -148,13 +149,13 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_ls                 wchar_t*
 
 # define FTST_TEST(test_name)                    \
-void    __FTST_TEST_CASE(test_name)(__ftst_test* test)
+void    __FTST_TEST_CASE(test_name)()
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)      \
 {                                                       \
-    test->launched++;                                   \
+    __g_ftst_test_results.launched++;                                   \
     if (cond) {                                         \
-        test->passed++;                                 \
+        __g_ftst_test_results.passed++;                                 \
     } else {                                            \
         error_funct;                                    \
     }                                                   \
@@ -337,18 +338,18 @@ static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test te
 static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
     clock_t     time;
-    __ftst_test test = (__ftst_test){ 0, 0 };
 
+    __g_ftst_test_results = (__ftst_test){ 0, 0 };
     __g_ftst_current_test = test_case_name;
     __ftst_pretty_print_start(test_case_name);
 
     time = __ftst_start_timer();
-    test_case(&test);
+    test_case();
     time = __ftst_end_timer(time);
 
-    __ftst_pretty_print_result(test_case_name, test, time);
+    __ftst_pretty_print_result(test_case_name, __g_ftst_test_results, time);
 
-    __ftst_pretty_print_table(test_case_name, test, time);
+    __ftst_pretty_print_table(test_case_name, __g_ftst_test_results, time);
     __g_ftst_current_test = NULL;
 }
 
