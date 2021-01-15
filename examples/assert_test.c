@@ -5,7 +5,9 @@ TEST(equal_test)
     EQ(1llu, 1);
     EQ(43, 43);
     EQ(43, 43, ASSERT);
-    EQ(0., 0.);
+    EQ(0., 0., EXPECT, f);
+    LESS(15, 30);
+    MORE(30, 15);
 }
 
 TEST(boolean_test)
@@ -22,6 +24,8 @@ TEST(error_test)
 {
     EQ(-1, 1);
     EQ(-1llu, 1llu, EXPECT, llu, llu);
+    LESS(-1llu, 1llu, EXPECT, llu);
+    LESSEQ(-1llu, 1llu, EXPECT, llu);
     EQ(-1llu, 1llu, ASSERT, llu);
     EQ(-1, 1);
 }
