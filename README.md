@@ -7,11 +7,11 @@ FTST это маленький header-only unit test framework для C совм
 - [x] Compatible with C89
 - [x] Compare integer types
 - [x] Compare boolean
+- [x] Compare string
 - [x] ASSERT and EXCEPT
 - [x] Unreadeble source on macro magic
-- [ ] Compare string
 - [ ] Compare with specific accuracy
-- [ ] Less, More, LessEqual, etc
+- [ ] Launch block of tests
 - [ ] Error custom comments
 - [ ] Allocation fail check
 
