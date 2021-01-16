@@ -36,7 +36,7 @@ TEST(error_test)
 {
     EQ(-1, 1);
     support_function(40, 80);
-    EQ(-1llu, -1llu, EXPECT, llu, lld);
+    EQ(-1llu, -1llu, EXPECT, llu);
     LESS(-1llu, 1llu, EXPECT, llu);
     LESSEQ(-1llu, 1llu, EXPECT, llu);
     EQ(-1llu, 1llu, ASSERT, llu);
