@@ -15,6 +15,10 @@
 #  define       FTST_NAMESPACE      true
 # endif
 
+# ifndef        FTST_SILENT
+#  define       FTST_SILENT         false
+# endif
+
 # ifndef        FTST_ERROR_MESSAGE
 #  define       FTST_ERROR_MESSAGE  true
 # endif
@@ -28,10 +32,10 @@ typedef struct {
     size_t      launched;
 }               __ftst_test;
 
-extern FILE*       __g_ftst_stream;
-extern FILE*       __g_ftst_table;
-extern __ftst_test __g_ftst_test_results;
-extern char const* __g_ftst_current_test;
+FILE*       __g_ftst_stream;
+FILE*       __g_ftst_table;
+__ftst_test __g_ftst_test_results;
+char const* __g_ftst_current_test;
 
 # define __FTST_IS_STREAM     (__g_ftst_stream != NULL)
 # define __FTST_IS_TABLE      (__g_ftst_table  != NULL)
@@ -290,15 +294,18 @@ static clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
 
 static void    __ftst_pretty_print_start(char const* test_case_name)
 {
+# if !(FTST_SILENT)
     if (__FTST_IS_STREAM)
         fprintf(__g_ftst_stream,
             __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
                                                                             test_case_name);
+# endif
 }
 
 static void    __ftst_pretty_print_result( \
         char const* test_case_name, __ftst_test test, clock_t time)
 {
+# if !(FTST_SILENT)
     if (__FTST_IS_STREAM)
     {
         if (test.passed == test.launched)
@@ -323,6 +330,7 @@ static void    __ftst_pretty_print_result( \
             " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
                                 time / 1000.);
     }
+# endif
 }
 
 static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
@@ -340,6 +348,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
     __g_ftst_test_results = (__ftst_test){ 0, 0 };
     __g_ftst_current_test = test_case_name;
+
     __ftst_pretty_print_start(test_case_name);
 
     time = __ftst_start_timer();
