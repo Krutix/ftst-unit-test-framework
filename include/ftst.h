@@ -19,7 +19,7 @@
 # ifndef        FTST_ERROR_MESSAGE
 #  define       FTST_ERROR_MESSAGE  true
 # endif
-# ifndef         FTST_VAR_STR_BUFFER
+# ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
 
