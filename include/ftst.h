@@ -7,8 +7,8 @@
 # include <stdbool.h>
 
 /* Default value settings */
-# ifndef        FTST_NO_COLOR
-#  define       FTST_NO_COLOR       false
+# ifndef        FTST_COLOR
+#  define       FTST_COLOR          true
 # endif
 # ifndef        FTST_NAMESPACE 
 #  define       FTST_NAMESPACE      true
@@ -19,7 +19,7 @@
 # ifndef        FTST_ERROR_MESSAGE
 #  define       FTST_ERROR_MESSAGE  true
 # endif
-# ifndef         FTST_VAR_STR_BUFFER
+# ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
 
@@ -67,15 +67,7 @@ __ftst_global __g_ftst_global;
 # endif
 
 
-# if FTST_NO_COLOR
-#  define __FTST_ANSI_COLOR_RED
-#  define __FTST_ANSI_COLOR_GREEN
-#  define __FTST_ANSI_COLOR_YELLOW
-#  define __FTST_ANSI_COLOR_BLUE
-#  define __FTST_ANSI_COLOR_MAGENTA
-#  define __FTST_ANSI_COLOR_CYAN
-#  define __FTST_ANSI_COLOR_RESET
-# else
+# if FTST_COLOR
 #  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
 #  define __FTST_ANSI_COLOR_GREEN   "\x1b[32m"
 #  define __FTST_ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -83,6 +75,14 @@ __ftst_global __g_ftst_global;
 #  define __FTST_ANSI_COLOR_MAGENTA "\x1b[35m"
 #  define __FTST_ANSI_COLOR_CYAN    "\x1b[36m"
 #  define __FTST_ANSI_COLOR_RESET   "\x1b[0m"
+# else
+#  define __FTST_ANSI_COLOR_RED
+#  define __FTST_ANSI_COLOR_GREEN
+#  define __FTST_ANSI_COLOR_YELLOW
+#  define __FTST_ANSI_COLOR_BLUE
+#  define __FTST_ANSI_COLOR_MAGENTA
+#  define __FTST_ANSI_COLOR_CYAN
+#  define __FTST_ANSI_COLOR_RESET
 # endif
 
 # define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
