@@ -4,6 +4,7 @@
 # include <time.h>
 # include <stdlib.h>
 # include <stdio.h>
+# include <string.h>
 # include <stdbool.h>
 
 /* Default value settings */
@@ -123,23 +124,20 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
                     snprintf(name, sizeof(name), format, value);
 
 /* Type define */
-# define __FTST_EQ_DEFAULT_TYPE d
+# define __FTST_EQ_DEFAULT_TYPE i
 
 # define __FTST_GET_TYPE(type) __FTST_TYPE_##type
 
-# define __FTST_TYPE_d                  int
-# define __FTST_TYPE_i                  __FTST_TYPE_d
-# define __FTST_TYPE_ld                 long __FTST_TYPE_d
+# define __FTST_TYPE_i                  int
 # define __FTST_TYPE_li                 long __FTST_TYPE_i
-# define __FTST_TYPE_lld                long long __FTST_TYPE_d
 # define __FTST_TYPE_lli                long long __FTST_TYPE_i
 # define __FTST_TYPE_u                  unsigned int
 # define __FTST_TYPE_lu                 long unsigned int
 # define __FTST_TYPE_llu                long long unsigned int
 # define __FTST_TYPE_z                  size_t
-# define __FTST_TYPE_ff                 float
-# define __FTST_TYPE_f                  double
-# define __FTST_TYPE_Lf                 long double
+# define __FTST_TYPE_gf                 float
+# define __FTST_TYPE_g                  double
+# define __FTST_TYPE_Lg                 long double
 # define __FTST_TYPE_p                  __intptr_t
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t

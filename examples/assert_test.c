@@ -10,7 +10,7 @@ TEST(equal_test)
     EQ(1llu, 1);
     EQ(43, 43);
     EQ(43, 43, ASSERT);
-    EQ(0., 0., EXPECT, f);
+    EQ(0., 0., EXPECT, g);
     support_function(20, 80);
     LESS(15, 30);
     MORE(30, 15);
