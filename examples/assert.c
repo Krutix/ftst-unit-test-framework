@@ -1,7 +1,7 @@
 
 #define FTST_ASSERT_LEVEL 2
 #define FTST_NAMESPACE 1
-#include "ftst_assert.h"
+#include "ftst.h"
 
 int main()
 {
