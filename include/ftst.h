@@ -26,13 +26,13 @@
 typedef struct {
     size_t      passed;
     size_t      launched;
-}               __ftst_test;
+}               __ftst_test_results;
 
 typedef struct {
-    FILE*       stream;
-    FILE*       table;
-    __ftst_test test_results;
-    char const* current_test;
+    FILE*       		stream;
+    FILE*       		table;
+    __ftst_test_results	test_results;
+    char const*			current_test;
 }               __ftst_global;
 
 __ftst_global __g_ftst_global;
@@ -300,7 +300,7 @@ static void    __ftst_pretty_print_start(char const* test_case_name)
 }
 
 static void    __ftst_pretty_print_result( \
-        char const* test_case_name, __ftst_test test, clock_t time)
+        char const* test_case_name, __ftst_test_results test, clock_t time)
 {
 # if !(FTST_SILENT)
     if (__FTST_IS_STREAM)
@@ -330,7 +330,7 @@ static void    __ftst_pretty_print_result( \
 # endif
 }
 
-static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
+static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_results test, clock_t time)
 {
     if (__FTST_IS_TABLE)
     {
@@ -343,7 +343,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 {
     clock_t     time;
 
-    __g_ftst_global.test_results = (__ftst_test){ 0, 0 };
+    __g_ftst_global.test_results = (__ftst_test_results){ 0, 0 };
     __g_ftst_global.current_test = test_case_name;
 
     __ftst_pretty_print_start(test_case_name);
