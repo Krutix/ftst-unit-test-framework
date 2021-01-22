@@ -27,13 +27,13 @@
 typedef struct {
     size_t      passed;
     size_t      launched;
-}               __ftst_test;
+}               __ftst_test_results;
 
 typedef struct {
-    FILE*       stream;
-    FILE*       table;
-    __ftst_test test_results;
-    char const* current_test;
+    FILE*       		stream;
+    FILE*       		table;
+    __ftst_test_results	test_results;
+    char const*			current_test;
 }               __ftst_global;
 
 __ftst_global __g_ftst_global;
@@ -220,25 +220,25 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
                             error_funct)                                                                    \
         }
 
-# define __FTST_STR_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_STR_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_STR_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
-# define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
 # define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
+# define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
+# define __FTST_STR_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
+# define __FTST_STR_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_STR_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 
-# define __FTST_TWO_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_TWO_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
-# define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, FTST_EXPECT)
-# define __FTST_TWO_CMP_4(operator, actual, expect, error_funct)                      __FTST_TWO_CMP_5(operator, actual, expect, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_TWO_CMP_5(operator, actual, expect, error_funct, type)                __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type)
+# define __FTST_TWO_CMP_4(operator, actual, expect, error_funct)                      __FTST_TWO_CMP_5(operator, actual, expect, error_funct, __FTST_EQ_DEFAULT_TYPE)
+# define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, FTST_EXPECT)
+# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
+# define __FTST_TWO_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_TWO_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
 
-# define __FTST_ONE_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_ONE_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, FTST_EXPECT)
-# define __FTST_ONE_CMP_4(operator, name, actual, error_funct)                        __FTST_ONE_CMP_5(operator, name, actual, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_ONE_CMP_5(operator, name, actual, error_funct, type)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
+# define __FTST_ONE_CMP_4(operator, name, actual, error_funct)                        __FTST_ONE_CMP_5(operator, name, actual, error_funct, __FTST_EQ_DEFAULT_TYPE)
+# define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, FTST_EXPECT)
+# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
 
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, ==, __VA_ARGS__)
 # define FTST_NE(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, !=, __VA_ARGS__)
@@ -298,7 +298,7 @@ static void    __ftst_pretty_print_start(char const* test_case_name)
 }
 
 static void    __ftst_pretty_print_result( \
-        char const* test_case_name, __ftst_test test, clock_t time)
+        char const* test_case_name, __ftst_test_results test, clock_t time)
 {
 # if !(FTST_SILENT)
     if (__FTST_IS_STREAM)
@@ -328,7 +328,7 @@ static void    __ftst_pretty_print_result( \
 # endif
 }
 
-static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test test, clock_t time)
+static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_results test, clock_t time)
 {
     if (__FTST_IS_TABLE)
     {
@@ -341,7 +341,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 {
     clock_t     time;
 
-    __g_ftst_global.test_results = (__ftst_test){ 0, 0 };
+    __g_ftst_global.test_results = (__ftst_test_results){ 0, 0 };
     __g_ftst_global.current_test = test_case_name;
 
     __ftst_pretty_print_start(test_case_name);
