@@ -102,8 +102,8 @@ __ftst_global __g_ftst_global;
 static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
 {
     fprintf(stderr,
-        "ftst error\n" \
-        "%d: [%s] \n", line, function_name, error_message);
+        __FTST_PRETTY_FAILED("ftst error\n") "%zu: [%s] - \"%s\" \n",
+		line, function_name, error_message);
     exit(-1);
 }
 
@@ -175,7 +175,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     {
         fprintf(__g_ftst_global.stream,
             "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-            "\n%d:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
+            "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
                 test_name, test_case_name, line, actual_value, actual);
         if (expect != NULL)
         {
@@ -332,7 +332,7 @@ static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_re
 {
     if (__FTST_IS_TABLE)
     {
-        fprintf(__g_ftst_global.table, "%s,%d/%d,%.3fms\n",
+        fprintf(__g_ftst_global.table, "%s,%zu/%zu,%.3fms\n",
             test_case_name, test.passed, test.launched, time / 1000.);
     }
 }
