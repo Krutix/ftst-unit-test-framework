@@ -155,8 +155,8 @@ __ftst_global __g_ftst_global;
 #  define FTST_STATIC_ASSERT(expr, error_message)
 # endif
 
-/************************************************************************
-************************************************************************/
+/*******************************************************
+*******************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -253,9 +253,9 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_s                  char*
 # define __FTST_TYPE_ls                 wchar_t*
 
-/****************************************************
-**              	TEST CASE
-****************************************************/
+/*****************************************************
+**              	TEST CASE						**
+*****************************************************/
 
 typedef     void(*__ftst_test_t)();
 
@@ -343,23 +343,23 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 
 # define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
 # define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
-# define __FTST_STR_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(2 == 3, str_eq_take_2_or_more_arguments_not_1)
-# define __FTST_STR_CMP_1(a)                                                          __FTST_STATIC_ASSERT(1 == 3, str_eq_take_2_or_more_arguments_not_0)
-# define __FTST_STR_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 3,)
+# define __FTST_STR_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_1)
+# define __FTST_STR_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_0)
+# define __FTST_STR_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
 # define __FTST_TWO_CMP_5(operator, actual, expect, error_funct, type)                __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type)
 # define __FTST_TWO_CMP_4(operator, actual, expect, error_funct)                      __FTST_TWO_CMP_5(operator, actual, expect, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, FTST_EXPECT)
-# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(2 == 3, eq_take_2_or_more_arguments_not_1)
-# define __FTST_TWO_CMP_1(a)                                                          __FTST_STATIC_ASSERT(1 == 3, eq_take_2_or_more_arguments_not_0)
-# define __FTST_TWO_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 3,)
+# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_1)
+# define __FTST_TWO_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_0)
+# define __FTST_TWO_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
 # define __FTST_ONE_CMP_5(operator, name, actual, error_funct, type)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
 # define __FTST_ONE_CMP_4(operator, name, actual, error_funct)                        __FTST_ONE_CMP_5(operator, name, actual, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, FTST_EXPECT)
-# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(1 == 2, bool_cmp_take_2_or_more_arguments_not_1)
-# define __FTST_ONE_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0 == 2, bool_cmp_take_2_or_more_arguments_not_0)
-# define __FTST_ONE_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 2,)
+# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, bool_cmp_take_1_or_more_arguments_not_0)
+# define __FTST_ONE_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0,)
+# define __FTST_ONE_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
 /********************************************************/
 /*						REAL TEST						*/
