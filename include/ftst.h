@@ -1,5 +1,5 @@
-#ifndef FT_SPEED_TEST_H
-# define FT_SPEED_TEST_H
+#ifndef FTST_H
+# define FTST_H
 
 # include <time.h>
 # include <stdlib.h>
@@ -8,11 +8,12 @@
 # include <stdint.h>
 # include <stdbool.h>
 
-/******************************************************
-**
-**              Default settings
-**
-*******************************************************/
+/*****************************************************
+**													**
+**              Default settings					**
+**													**
+******************************************************/
+
 # ifndef        FTST_COLOR
 #  define       FTST_COLOR          true
 # endif
@@ -28,26 +29,6 @@
 # ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
-
-/*******************************************************
-*******************************************************/
-typedef struct {
-    size_t      passed;
-    size_t      launched;
-}               __ftst_test_results;
-
-typedef struct {
-    FILE*       		stream;
-    FILE*       		table;
-    __ftst_test_results	test_results;
-    char const*			current_test;
-}               __ftst_global;
-
-__ftst_global __g_ftst_global;
-
-# define __FTST_IS_STREAM     (__g_ftst_global.stream != NULL)
-# define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
-
 
 # if        FTST_NAMESPACE
 #  define EQ            FTST_EQ
@@ -74,6 +55,8 @@ __ftst_global __g_ftst_global;
 #  define RUNTEST       FTST_RUNTEST
 # endif
 
+/************************************************/
+/*					COLORS						*/
 
 # if FTST_COLOR
 #  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
@@ -98,6 +81,26 @@ __ftst_global __g_ftst_global;
 # define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
+
+/************************************************/
+/*					global data					*/
+
+typedef struct {
+    size_t      passed;
+    size_t      launched;
+}               __ftst_test_results;
+
+typedef struct {
+    FILE*       		stream;
+    FILE*       		table;
+    __ftst_test_results	test_results;
+    char const*			current_test;
+}               __ftst_global;
+
+__ftst_global __g_ftst_global;
+
+# define __FTST_IS_STREAM     (__g_ftst_global.stream != NULL)
+# define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
 
 /*************************************************************************
 **
@@ -125,9 +128,8 @@ __ftst_global __g_ftst_global;
 # define __FTST_ASSERT_GLUE_(line, a, b) line##a##b
 # define __FTST_ASSERT_GLUE(a, b) __FTST_ASSERT_GLUE_(__LINE__, a, b)
 
-/*
-** Runtime assert which triggered breakpoint when expression is false
-*/
+/* Runtime assert which triggered breakpoint when expression is false */
+
 # if FTST_ASSERT_LEVEL >= 2
 #  define FTST_RUNTIME_ASSERT(expr, error_message)              \
     {                                                           \
@@ -140,21 +142,22 @@ __ftst_global __g_ftst_global;
 #  define FTST_ASSERT(expr, error_message)
 # endif
 
-/*
-** Compiletime assert which triggered compilation error when expression is false
-*/
-# if FTST_ASSERT_LEVEL >= 1
-# define FTST_STATIC_ASSERT(expr, error_message)                \
+/* Compiletime assert which triggered compilation error when expression is false */
+
+# define __FTST_STATIC_ASSERT(expr, error_message)              \
     enum {                                                      \
         __FTST_ASSERT_GLUE(_assert_fail_, error_message)        \
                 = 1 / (int) (!!(expr))                          \
     }
+
+# if FTST_ASSERT_LEVEL >= 1
+# define FTST_STATIC_ASSERT(expr, error_message)                \
+		__FTST_STATIC_ASSERT(expr, error_message)
 # else
 #  define FTST_STATIC_ASSERT(expr, error_message)
 # endif
 
 /************************************************************************
-*************************************************************************
 ************************************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
@@ -184,6 +187,7 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 **  MY_MACRO_3(a, b, c)
 **
 */
+
 #define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
 #define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
 #define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
@@ -252,10 +256,9 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_s                  char*
 # define __FTST_TYPE_ls                 wchar_t*
 
-
 /*******************************************************
 **
-**              TEST CASE DEFENITION
+**              	TEST CASE
 **
 ********************************************************/
 
@@ -264,7 +267,8 @@ typedef     void(*__ftst_test_t)();
 # define FTST_TEST(test_name)                           \
 void    __FTST_TEST_CASE(test_name)()
 
-/*******************************************************/
+/********************************************************/
+/*					TEST BRANCH							*/
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
@@ -275,6 +279,9 @@ void    __FTST_TEST_CASE(test_name)()
         error_funct;                                    \
     }                                                   \
 }
+
+/********************************************************/
+/*					ERROR MESSAGE						*/
 
 # if FTST_ERROR_MESSAGE
 #  define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
@@ -304,6 +311,8 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     }
 }
 
+/********************************************************/
+/*					TEST TEMPLATES						*/
 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
@@ -339,23 +348,26 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 
 # define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
 # define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
-# define __FTST_STR_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
-# define __FTST_STR_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_STR_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_STR_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(2 == 3, str_eq_take_2_or_more_arguments_not_1)
+# define __FTST_STR_CMP_1(a)                                                          __FTST_STATIC_ASSERT(1 == 3, str_eq_take_2_or_more_arguments_not_0)
+# define __FTST_STR_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 3,)
 
 # define __FTST_TWO_CMP_5(operator, actual, expect, error_funct, type)                __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type)
 # define __FTST_TWO_CMP_4(operator, actual, expect, error_funct)                      __FTST_TWO_CMP_5(operator, actual, expect, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, FTST_EXPECT)
-# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 1");
-# define __FTST_TWO_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
-# define __FTST_TWO_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("EQ take 2 or more arguments, not 0");
+# define __FTST_TWO_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(2 == 3, eq_take_2_or_more_arguments_not_1)
+# define __FTST_TWO_CMP_1(a)                                                          __FTST_STATIC_ASSERT(1 == 3, eq_take_2_or_more_arguments_not_0)
+# define __FTST_TWO_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 3,)
 
 # define __FTST_ONE_CMP_5(operator, name, actual, error_funct, type)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
 # define __FTST_ONE_CMP_4(operator, name, actual, error_funct)                        __FTST_ONE_CMP_5(operator, name, actual, error_funct, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, FTST_EXPECT)
-# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_ONE_CMP_1(a)                                                          __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
-# define __FTST_ONE_CMP_0()                                                           __FTST_FATAL_CASE_ERROR("IS_TRUE take 1 or more arguments, not 0");
+# define __FTST_ONE_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(1 == 2, bool_cmp_take_2_or_more_arguments_not_1)
+# define __FTST_ONE_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0 == 2, bool_cmp_take_2_or_more_arguments_not_0)
+# define __FTST_ONE_CMP_0()                                                           __FTST_STATIC_ASSERT(0 == 2,)
+
+/********************************************************/
+/*						REAL TEST						*/
 
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, ==, __VA_ARGS__)
 # define FTST_NE(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, !=, __VA_ARGS__)
@@ -374,8 +386,13 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
 
+/*************************************************************
+**															**
+**			Initialization and execution tests				**
+**															**
+*************************************************************/
 
-static void    ftst_init(FILE* stream_output, char const* result_file_name)
+static void    __ftst_init(FILE* stream_output, char const* result_file_name)
 {
     __g_ftst_global.stream = stream_output;
 
@@ -388,7 +405,13 @@ static void    ftst_init(FILE* stream_output, char const* result_file_name)
     }
 }
 
-static void    ftst_exit(void)
+# define __FTST_INIT_2(stream_output, result_file_name)		__ftst_init(stream_output, result_file_name)
+# define __FTST_INIT_1(stream_output)						__FTST_INIT_2(stream_output, NULL)
+# define __FTST_INIT_0()									__FTST_INIT_1(stdout)
+
+# define FTST_INIT(...) __FTST_MULTI_MACRO(__FTST_INIT, __VA_ARGS__)
+
+static void    __ftst_exit(void)
 {
     if (__FTST_IS_TABLE)
         fclose(__g_ftst_global.table);
@@ -397,12 +420,10 @@ static void    ftst_exit(void)
     __g_ftst_global.stream  = NULL;
 }
 
+# define FTST_EXIT()	__ftst_exit()
 
-# define FTST_RUNTEST(test_name) \
-    __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
-
-static clock_t __ftst_start_timer() { return clock(); }
-static clock_t __ftst_end_timer(clock_t start) { return clock() - start; }
+/********************************************************/
+/*					PRINT RESULTS						*/
 
 static void    __ftst_pretty_print_start(char const* test_case_name)
 {
@@ -414,7 +435,7 @@ static void    __ftst_pretty_print_start(char const* test_case_name)
 # endif
 }
 
-static void    __ftst_pretty_print_result( \
+static void    __ftst_pretty_print_result(
         char const* test_case_name, __ftst_test_results test, clock_t time)
 {
 # if !(FTST_SILENT)
@@ -445,7 +466,8 @@ static void    __ftst_pretty_print_result( \
 # endif
 }
 
-static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_results test, clock_t time)
+static void __ftst_pretty_print_table(
+		char const* test_case_name, __ftst_test_results test, clock_t time)
 {
     if (__FTST_IS_TABLE)
     {
@@ -453,6 +475,15 @@ static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_re
             test_case_name, test.passed, test.launched, time / 1000.);
     }
 }
+
+/********************************************************/
+/*					TEST EXECUTION						*/
+
+# define FTST_RUNTEST(test_name) \
+    __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
+
+static clock_t ftst_start_timer() { return clock(); }
+static clock_t ftst_time(clock_t start) { return clock() - start; }
 
 static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
@@ -463,9 +494,9 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
     __ftst_pretty_print_start(test_case_name);
 
-    time = __ftst_start_timer();
+    time = ftst_start_timer();
     test_case();
-    time = __ftst_end_timer(time);
+    time = ftst_time(time);
 
     __ftst_pretty_print_result(test_case_name, __g_ftst_global.test_results, time);
     __ftst_pretty_print_table(test_case_name, __g_ftst_global.test_results, time);

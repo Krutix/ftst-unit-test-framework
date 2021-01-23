@@ -45,12 +45,12 @@ TEST(error_test)
 
 int main()
 {
-    ftst_init(stdout, NULL);
+    FTST_INIT(stdout);
 
     RUNTEST(equal_test);
     RUNTEST(boolean_test);
     RUNTEST(string_cmp);
     RUNTEST(error_test);
 
-    ftst_exit();
+    FTST_EXIT();
 }

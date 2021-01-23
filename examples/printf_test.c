@@ -23,10 +23,10 @@ FTST_TEST(complex_format_int)
 
 int main()
 {
-    ftst_init(stderr, RESULT_FILE);
+    FTST_INIT(stderr, RESULT_FILE);
 
     FTST_RUNTEST(simple_integer);
     FTST_RUNTEST(complex_format_int);
 
-    ftst_exit();
+    FTST_EXIT();
 }
