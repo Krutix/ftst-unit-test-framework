@@ -5,7 +5,7 @@
 
 int main()
 {
-    STATIC_ASSERT(4 == sizeof(int)); /* true */
-    /* STATIC_ASSERT(1 == sizeof(float)); /* false */
-    ASSERT(1 == 2, "error"); /* Runtime error */
+    STATIC_ASSERT(4 == sizeof(int), int_must_be_4_bytes); /* true */
+    STATIC_ASSERT(1 == sizeof(float), float_must_be_1_byte); /* false */
+    RUNTIME_ASSERT(1 == 2, "error"); /* Runtime error */
 }
