@@ -5,9 +5,14 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
+# include <stdint.h>
 # include <stdbool.h>
 
-/* Default value settings */
+/******************************************************
+**
+**              Default settings
+**
+*******************************************************/
 # ifndef        FTST_COLOR
 #  define       FTST_COLOR          true
 # endif
@@ -24,6 +29,8 @@
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
 
+/*******************************************************
+*******************************************************/
 typedef struct {
     size_t      passed;
     size_t      launched;
@@ -92,9 +99,11 @@ __ftst_global __g_ftst_global;
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
-/*************************************************************************/
-/*                              ASSERTION                                */
-/*************************************************************************/
+/*************************************************************************
+**
+**                              ASSERTION
+**
+**************************************************************************/
 
 # if        FTST_NAMESPACE
 #  define   RUNTIME_ASSERT    FTST_RUNTIME_ASSERT
@@ -144,9 +153,9 @@ __ftst_global __g_ftst_global;
 #  define FTST_STATIC_ASSERT(expr, error_message)
 # endif
 
-/*************************************************************************/
-/*                                                                       */
-/*************************************************************************/
+/************************************************************************
+*************************************************************************
+************************************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -162,8 +171,19 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
     exit(-1);
 }
 
-/* MULTI MACRO */
-/* allow to use same name for macro with different number of args */
+/*
+**                           MULTI MACRO
+**  allow to use same name for macro with different number of args
+**
+**  __FTST_MULTI_MACRO choose macro named FUNC and postfix with number of args
+**
+**  example:
+**  __FTST_MULTI_MACRO(MY_MACRO, __VA_ARGS__)
+**  MY_MACRO_1(a)
+**  MY_MACRO_2(a, b)
+**  MY_MACRO_3(a, b, c)
+**
+*/
 #define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
 #define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
 #define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
@@ -178,7 +198,31 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
                     char name[size];                                \
                     snprintf(name, sizeof(name), format, value);
 
-/* Type define */
+/*
+**
+**  Type converter from printf style to real type
+**
+**  i/d     | int
+**  li/ld   | long int
+**  lli/lld | long long int
+**  zi/zd   | ssize_t
+**
+**  u/x     | int
+**  lu/lx   | long int
+**  llu/llx | long long int
+**  p       | void*
+**  zu      | size_t
+**
+**  f/g     | double
+**  Lg/Lf   | long double
+**
+**  c       | char
+**  lc      | wchar_t
+**  s       | char*
+**  ls      | wchar_t*
+**
+*/
+
 # define __FTST_EQ_DEFAULT_TYPE i
 
 # define __FTST_GET_TYPE(type) __FTST_TYPE_##type
@@ -186,21 +230,41 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_i                  int
 # define __FTST_TYPE_li                 long __FTST_TYPE_i
 # define __FTST_TYPE_lli                long long __FTST_TYPE_i
+# define __FTST_TYPE_zi                 __ssize_t
+# define __FTST_TYPE_d                  __FTST_TYPE_i
+# define __FTST_TYPE_ld                 __FTST_TYPE_li
+# define __FTST_TYPE_lld                __FTST_TYPE_lli
+# define __FTST_TYPE_zd                 __ssize_t
 # define __FTST_TYPE_u                  unsigned int
 # define __FTST_TYPE_lu                 long unsigned int
 # define __FTST_TYPE_llu                long long unsigned int
-# define __FTST_TYPE_z                  size_t
-# define __FTST_TYPE_gf                 float
+# define __FTST_TYPE_x                  __FTST_TYPE_u
+# define __FTST_TYPE_lx                 __FTST_TYPE_lu
+# define __FTST_TYPE_llx                __FTST_TYPE_llu
+# define __FTST_TYPE_p                  void*
+# define __FTST_TYPE_zu                 size_t
 # define __FTST_TYPE_g                  double
 # define __FTST_TYPE_Lg                 long double
-# define __FTST_TYPE_p                  __intptr_t
+# define __FTST_TYPE_f                  double
+# define __FTST_TYPE_Lf                 long double
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
+# define __FTST_TYPE_s                  char*
+# define __FTST_TYPE_ls                 wchar_t*
+
+
+/*******************************************************
+**
+**              TEST CASE DEFENITION
+**
+********************************************************/
 
 typedef     void(*__ftst_test_t)();
 
 # define FTST_TEST(test_name)                           \
 void    __FTST_TEST_CASE(test_name)()
+
+/*******************************************************/
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
