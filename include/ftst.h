@@ -8,11 +8,11 @@
 # include <stdint.h>
 # include <stdbool.h>
 
-/*****************************************************
-**													**
-**              Default settings					**
-**													**
-******************************************************/
+/*************************************************
+**												**
+**              Default settings				**
+**												**
+*************************************************/
 
 # ifndef        FTST_COLOR
 #  define       FTST_COLOR          true
@@ -102,11 +102,9 @@ __ftst_global __g_ftst_global;
 # define __FTST_IS_STREAM     (__g_ftst_global.stream != NULL)
 # define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
 
-/*************************************************************************
-**
-**                              ASSERTION
-**
-**************************************************************************/
+/*****************************************************
+**                   ASSERTION						**
+*****************************************************/
 
 # if        FTST_NAMESPACE
 #  define   RUNTIME_ASSERT    FTST_RUNTIME_ASSERT
@@ -203,7 +201,6 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
                     snprintf(name, sizeof(name), format, value);
 
 /*
-**
 **  Type converter from printf style to real type
 **
 **  i/d     | int
@@ -256,19 +253,17 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_s                  char*
 # define __FTST_TYPE_ls                 wchar_t*
 
-/*******************************************************
-**
+/****************************************************
 **              	TEST CASE
-**
-********************************************************/
+****************************************************/
 
 typedef     void(*__ftst_test_t)();
 
 # define FTST_TEST(test_name)                           \
 void    __FTST_TEST_CASE(test_name)()
 
-/********************************************************/
-/*					TEST BRANCH							*/
+/****************************************************/
+/*					TEST BRANCH						*/
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
@@ -280,8 +275,8 @@ void    __FTST_TEST_CASE(test_name)()
     }                                                   \
 }
 
-/********************************************************/
-/*					ERROR MESSAGE						*/
+/****************************************************/
+/*					ERROR MESSAGE					*/
 
 # if FTST_ERROR_MESSAGE
 #  define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
@@ -311,8 +306,8 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     }
 }
 
-/********************************************************/
-/*					TEST TEMPLATES						*/
+/****************************************************/
+/*					TEST TEMPLATES					*/
 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
