@@ -42,7 +42,7 @@ __ftst_global __g_ftst_global;
 # define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
 
 
-# ifndef NAMESPACE_FTST
+# if        FTST_NAMESPACE
 #  define EQ            FTST_EQ
 #  define NE            FTST_NE
 #  define LESS          FTST_LESS
@@ -92,6 +92,61 @@ __ftst_global __g_ftst_global;
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
+/*************************************************************************/
+/*                              ASSERTION                                */
+/*************************************************************************/
+
+# if        FTST_NAMESPACE
+#  define   RUNTIME_ASSERT    FTST_RUNTIME_ASSERT
+#  define   STATIC_ASSERT     FTST_STATIC_ASSERT
+# endif
+
+# ifndef    FTST_ASSERT_LEVEL
+#  define   FTST_ASSERT_LEVEL 2
+# endif
+
+# define __FTST_ASSERT_ERROR_MESSAGE(expr, error_message)               \
+                    fprintf(stderr, "%d [%s]: [%s] \"%s\"\n",           \
+                        __LINE__, __FUNCTION__, #expr, error_message);  \
+                    fflush(stderr)
+
+# define __FTST_BREAK_POINT() __asm__("int $3")
+
+
+# define __FTST_ASSERT_GLUE_(line, a, b) line##a##b
+# define __FTST_ASSERT_GLUE(a, b) __FTST_ASSERT_GLUE_(__LINE__, a, b)
+
+/*
+** Runtime assert which triggered breakpoint when expression is false
+*/
+# if FTST_ASSERT_LEVEL >= 2
+#  define FTST_RUNTIME_ASSERT(expr, error_message)              \
+    {                                                           \
+        if (!(expr)) {                                          \
+            __FTST_ASSERT_ERROR_MESSAGE(expr, error_message);   \
+            __FTST_BREAK_POINT();                               \
+        }                                                       \
+    }
+# else
+#  define FTST_ASSERT(expr, error_message)
+# endif
+
+/*
+** Compiletime assert which triggered compilation error when expression is false
+*/
+# if FTST_ASSERT_LEVEL >= 1
+# define FTST_STATIC_ASSERT(expr, error_message)                \
+    enum {                                                      \
+        __FTST_ASSERT_GLUE(_assert_fail_, error_message)        \
+                = 1 / (int) (!!(expr))                          \
+    }
+# else
+#  define FTST_STATIC_ASSERT(expr, error_message)
+# endif
+
+/*************************************************************************/
+/*                                                                       */
+/*************************************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -141,8 +196,6 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_p                  __intptr_t
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
-# define __FTST_TYPE_s                  char*
-# define __FTST_TYPE_ls                 wchar_t*
 
 typedef     void(*__ftst_test_t)();
 
