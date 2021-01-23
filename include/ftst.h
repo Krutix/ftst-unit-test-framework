@@ -4,9 +4,15 @@
 # include <time.h>
 # include <stdlib.h>
 # include <stdio.h>
+# include <string.h>
+# include <stdint.h>
 # include <stdbool.h>
 
-/* Default value settings */
+/******************************************************
+**
+**              Default settings
+**
+*******************************************************/
 # ifndef        FTST_COLOR
 #  define       FTST_COLOR          true
 # endif
@@ -23,6 +29,8 @@
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
 
+/*******************************************************
+*******************************************************/
 typedef struct {
     size_t      passed;
     size_t      launched;
@@ -41,7 +49,7 @@ __ftst_global __g_ftst_global;
 # define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
 
 
-# ifndef NAMESPACE_FTST
+# if        FTST_NAMESPACE
 #  define EQ            FTST_EQ
 #  define NE            FTST_NE
 #  define LESS          FTST_LESS
@@ -91,6 +99,63 @@ __ftst_global __g_ftst_global;
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
+/*************************************************************************
+**
+**                              ASSERTION
+**
+**************************************************************************/
+
+# if        FTST_NAMESPACE
+#  define   RUNTIME_ASSERT    FTST_RUNTIME_ASSERT
+#  define   STATIC_ASSERT     FTST_STATIC_ASSERT
+# endif
+
+# ifndef    FTST_ASSERT_LEVEL
+#  define   FTST_ASSERT_LEVEL 2
+# endif
+
+# define __FTST_ASSERT_ERROR_MESSAGE(expr, error_message)               \
+                    fprintf(stderr, "%d [%s]: [%s] \"%s\"\n",           \
+                        __LINE__, __FUNCTION__, #expr, error_message);  \
+                    fflush(stderr)
+
+# define __FTST_BREAK_POINT() __asm__("int $3")
+
+
+# define __FTST_ASSERT_GLUE_(line, a, b) line##a##b
+# define __FTST_ASSERT_GLUE(a, b) __FTST_ASSERT_GLUE_(__LINE__, a, b)
+
+/*
+** Runtime assert which triggered breakpoint when expression is false
+*/
+# if FTST_ASSERT_LEVEL >= 2
+#  define FTST_RUNTIME_ASSERT(expr, error_message)              \
+    {                                                           \
+        if (!(expr)) {                                          \
+            __FTST_ASSERT_ERROR_MESSAGE(expr, error_message);   \
+            __FTST_BREAK_POINT();                               \
+        }                                                       \
+    }
+# else
+#  define FTST_ASSERT(expr, error_message)
+# endif
+
+/*
+** Compiletime assert which triggered compilation error when expression is false
+*/
+# if FTST_ASSERT_LEVEL >= 1
+# define FTST_STATIC_ASSERT(expr, error_message)                \
+    enum {                                                      \
+        __FTST_ASSERT_GLUE(_assert_fail_, error_message)        \
+                = 1 / (int) (!!(expr))                          \
+    }
+# else
+#  define FTST_STATIC_ASSERT(expr, error_message)
+# endif
+
+/************************************************************************
+*************************************************************************
+************************************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -101,13 +166,24 @@ __ftst_global __g_ftst_global;
 static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
 {
     fprintf(stderr,
-        "ftst error\n" \
-        "%d: [%s] \n", line, function_name, error_message);
+        __FTST_PRETTY_FAILED("ftst error\n") "%zu: [%s] - \"%s\" \n",
+		line, function_name, error_message);
     exit(-1);
 }
 
-/* MULTI MACRO */
-/* allow to use same name for macro with different number of args */
+/*
+**                           MULTI MACRO
+**  allow to use same name for macro with different number of args
+**
+**  __FTST_MULTI_MACRO choose macro named FUNC and postfix with number of args
+**
+**  example:
+**  __FTST_MULTI_MACRO(MY_MACRO, __VA_ARGS__)
+**  MY_MACRO_1(a)
+**  MY_MACRO_2(a, b)
+**  MY_MACRO_3(a, b, c)
+**
+*/
 #define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
 #define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
 #define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
@@ -122,34 +198,73 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
                     char name[size];                                \
                     snprintf(name, sizeof(name), format, value);
 
-/* Type define */
-# define __FTST_EQ_DEFAULT_TYPE d
+/*
+**
+**  Type converter from printf style to real type
+**
+**  i/d     | int
+**  li/ld   | long int
+**  lli/lld | long long int
+**  zi/zd   | ssize_t
+**
+**  u/x     | int
+**  lu/lx   | long int
+**  llu/llx | long long int
+**  p       | void*
+**  zu      | size_t
+**
+**  f/g     | double
+**  Lg/Lf   | long double
+**
+**  c       | char
+**  lc      | wchar_t
+**  s       | char*
+**  ls      | wchar_t*
+**
+*/
+
+# define __FTST_EQ_DEFAULT_TYPE i
 
 # define __FTST_GET_TYPE(type) __FTST_TYPE_##type
 
-# define __FTST_TYPE_d                  int
-# define __FTST_TYPE_i                  __FTST_TYPE_d
-# define __FTST_TYPE_ld                 long __FTST_TYPE_d
+# define __FTST_TYPE_i                  int
 # define __FTST_TYPE_li                 long __FTST_TYPE_i
-# define __FTST_TYPE_lld                long long __FTST_TYPE_d
 # define __FTST_TYPE_lli                long long __FTST_TYPE_i
+# define __FTST_TYPE_zi                 __ssize_t
+# define __FTST_TYPE_d                  __FTST_TYPE_i
+# define __FTST_TYPE_ld                 __FTST_TYPE_li
+# define __FTST_TYPE_lld                __FTST_TYPE_lli
+# define __FTST_TYPE_zd                 __ssize_t
 # define __FTST_TYPE_u                  unsigned int
 # define __FTST_TYPE_lu                 long unsigned int
 # define __FTST_TYPE_llu                long long unsigned int
-# define __FTST_TYPE_z                  size_t
-# define __FTST_TYPE_ff                 float
+# define __FTST_TYPE_x                  __FTST_TYPE_u
+# define __FTST_TYPE_lx                 __FTST_TYPE_lu
+# define __FTST_TYPE_llx                __FTST_TYPE_llu
+# define __FTST_TYPE_p                  void*
+# define __FTST_TYPE_zu                 size_t
+# define __FTST_TYPE_g                  double
+# define __FTST_TYPE_Lg                 long double
 # define __FTST_TYPE_f                  double
 # define __FTST_TYPE_Lf                 long double
-# define __FTST_TYPE_p                  __intptr_t
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
 # define __FTST_TYPE_s                  char*
 # define __FTST_TYPE_ls                 wchar_t*
 
+
+/*******************************************************
+**
+**              TEST CASE DEFENITION
+**
+********************************************************/
+
 typedef     void(*__ftst_test_t)();
 
 # define FTST_TEST(test_name)                           \
 void    __FTST_TEST_CASE(test_name)()
+
+/*******************************************************/
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
@@ -177,7 +292,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     {
         fprintf(__g_ftst_global.stream,
             "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-            "\n%d:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
+            "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
                 test_name, test_case_name, line, actual_value, actual);
         if (expect != NULL)
         {
@@ -334,7 +449,7 @@ static void __ftst_pretty_print_table(char const* test_case_name, __ftst_test_re
 {
     if (__FTST_IS_TABLE)
     {
-        fprintf(__g_ftst_global.table, "%s,%d/%d,%.3fms\n",
+        fprintf(__g_ftst_global.table, "%s,%zu/%zu,%.3fms\n",
             test_case_name, test.passed, test.launched, time / 1000.);
     }
 }
