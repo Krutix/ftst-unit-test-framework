@@ -9,9 +9,7 @@
 # include <stdbool.h>
 
 /*************************************************
-**												**
 **              Default settings				**
-**												**
 *************************************************/
 
 # ifndef        FTST_COLOR
@@ -127,21 +125,22 @@ __ftst_global __g_ftst_global;
 # define __FTST_ASSERT_GLUE(a, b) __FTST_ASSERT_GLUE_(__LINE__, a, b)
 
 /* Runtime assert which triggered breakpoint when expression is false */
-
-# if FTST_ASSERT_LEVEL >= 2
-#  define FTST_RUNTIME_ASSERT(expr, error_message)              \
+#  define __FTST_RUNTIME_ASSERT(expr, error_message)            \
     {                                                           \
         if (!(expr)) {                                          \
             __FTST_ASSERT_ERROR_MESSAGE(expr, error_message);   \
             __FTST_BREAK_POINT();                               \
         }                                                       \
     }
+
+# if FTST_ASSERT_LEVEL >= 2
+#  define FTST_RUNTIME_ASSERT(expr, error_message)              \
+        __FTST_RUNTIME_ASSERT(expr, error_message)
 # else
 #  define FTST_ASSERT(expr, error_message)
 # endif
 
 /* Compiletime assert which triggered compilation error when expression is false */
-
 # define __FTST_STATIC_ASSERT(expr, error_message)              \
     enum {                                                      \
         __FTST_ASSERT_GLUE(_assert_fail_, error_message)        \
@@ -235,7 +234,7 @@ static void    __ftst_fatal_error(size_t line, char const* function_name, char c
 # define __FTST_TYPE_d                  __FTST_TYPE_i
 # define __FTST_TYPE_ld                 __FTST_TYPE_li
 # define __FTST_TYPE_lld                __FTST_TYPE_lli
-# define __FTST_TYPE_zd                 __ssize_t
+# define __FTST_TYPE_zd                 __FTST_TYPE_i
 # define __FTST_TYPE_u                  unsigned int
 # define __FTST_TYPE_lu                 long unsigned int
 # define __FTST_TYPE_llu                long long unsigned int
@@ -382,9 +381,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
 
 /*************************************************************
-**															**
 **			Initialization and execution tests				**
-**															**
 *************************************************************/
 
 static void    __ftst_init(FILE* stream_output, char const* result_file_name)
