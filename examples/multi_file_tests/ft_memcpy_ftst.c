@@ -8,5 +8,5 @@ TEST(ft_memcpy_basic_test)
 {
     char buff[256];
     STR_EQ(ft_memcpy(buff, "aaaaaaa", 8), "aaaaaaa");
-    STR_EQ(ft_memcpy(buff, "aaaa", 4), "aaaaaaa");
+    STR_EQ(ft_memcpy(buff, "bbbb", 4), "bbbbaaa");
 }
