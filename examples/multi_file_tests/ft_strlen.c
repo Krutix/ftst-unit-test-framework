@@ -13,7 +13,7 @@
 #include "stddef.h"
 #include <stdint.h>
 
-inline const char	*ft_strlen_check(const char *char_ptr)
+static inline const char	*ft_strlen_check(const char *char_ptr)
 {
 	if (*char_ptr == 0)
 		return (char_ptr);

@@ -53,6 +53,12 @@
 #  define RUNTEST       FTST_RUNTEST
 # endif
 
+# ifndef FTST_SUB_TEST
+#  define __FTST_EXTERN extern
+# else
+#  define __FTST_EXTERN
+# endif
+
 /************************************************/
 /*					COLORS						*/
 
@@ -95,7 +101,7 @@ typedef struct {
     char const*			current_test;
 }               __ftst_global;
 
-__ftst_global __g_ftst_global;
+__FTST_EXTERN __ftst_global __g_ftst_global;
 
 # define __FTST_IS_STREAM     (__g_ftst_global.stream != NULL)
 # define __FTST_IS_TABLE      (__g_ftst_global.table  != NULL)
