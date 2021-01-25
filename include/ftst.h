@@ -53,7 +53,7 @@
 #  define RUNTEST       FTST_RUNTEST
 # endif
 
-# ifndef FTST_SUB_TEST
+# ifdef FTST_SUB_TEST
 #  define __FTST_EXTERN extern
 # else
 #  define __FTST_EXTERN
