@@ -8,16 +8,6 @@
 # include <stdint.h>
 # include <stdbool.h>
 
-/* includes for replace standart functions call */
-# if   defined(__linux__)
-#  include <malloc.h>
-#  define _GNU_SOURCE
-#  define __USE_GNU
-# elif defined(__APPLE__)
-#  include <malloc/malloc.h>
-# endif
-# include <dlfcn.h>
-
 /*************************************************
 **              Default settings				**
 *************************************************/
@@ -99,29 +89,6 @@
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
-/************************************************/
-/*					global data					*/
-
-typedef struct {
-    size_t      passed;
-    size_t      launched;
-}               __ftst_test_results;
-
-typedef struct {
-    FILE*       		stream;
-    FILE*       		table;
-    __ftst_test_results	test_results;
-    char const*			current_test;
-}               __ftst_global;
-
-__FTST_EXTERN void*(*libc_malloc)(size_t);
-__FTST_EXTERN void(*libc_free)(void*);
-
-__FTST_EXTERN __ftst_global __ftst_global_test;
-
-# define __FTST_IS_STREAM     (__ftst_global_test.stream != NULL)
-# define __FTST_IS_TABLE      (__ftst_global_test.table  != NULL)
-
 /*****************************************************
 **                   ASSERTION						**
 *****************************************************/
@@ -181,42 +148,103 @@ __FTST_EXTERN __ftst_global __ftst_global_test;
 *****************************************************/
 
 # if        FTST_ALLOC_TEST
+
+#  if   defined(__linux__)
+#   include <malloc.h>
+#   define _GNU_SOURCE
+#   define __USE_GNU
+#  elif defined(__APPLE__)
+#   include <malloc/malloc.h>
+#  endif
+#  include <dlfcn.h>
+/*
+** On linux use -ldl flag to link dlfcn lib
+*/
+
+__FTST_EXTERN void*(*libc_malloc)(size_t);
+__FTST_EXTERN void(*libc_free)(void*);
+
 typedef struct {
     bool      is_active;
     size_t    d;
 }   __ftst_alloc_limit;
 
 typedef struct {
-    __ftst_alloc_limit     alloc_limit;
-    __ftst_alloc_limit     single_alloc_limit;
-    __ftst_alloc_limit     alloc_fail_timer;
+    __ftst_alloc_limit     limit;
+    __ftst_alloc_limit     single_limit;
+    __ftst_alloc_limit     fail_counter;
+    bool                   error_happend;
 }   __ftst_alloc;
 
 __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 
+#  define   __FTST_ALLOC_SET(value, test)       \
+    {                                           \
+        test.is_active = true;                  \
+        test.d = value;                         \
+    }
+
+#  define   __FTST_ALLOC_CLEAN(test)            \
+    {                                           \
+        test.is_active = false;                 \
+    }
+
+#  define   FTST_ALLOC_COUNTER_SET(value)           __FTST_ALLOC_SET(value, __ftst_alloc_test.fail_counter)
+#  define   FTST_ALLOC_COUNTER_CLEAN(value)         __FTST_ALLOC_CLEAN(__ftst_alloc_test.fail_counter)
+
+#  define   FTST_ALLOC_LIMIT_SET(value)             __FTST_ALLOC_SET(value, __ftst_alloc_test.limit)
+#  define   FTST_ALLOC_LIMIT_CLEAN(value)           __FTST_ALLOC_CLEAN(__ftst_alloc_test.limit)
+
+#  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
+#  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN(value)    __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
+
+#  define   FTST_ALLOC_IF_ERROR(check)          \
+    if (__ftst_alloc_test.error_happend)        \
+    {                                           \
+        check;                                  \
+    }
+
+#  if       FTST_NAMESPACE
+#   define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
+#   define  ALLOC_COUNTER_CLEAN         FTST_ALLOC_COUNTER_CLEAN
+
+#   define  ALLOC_LIMIT_SET             FTST_ALLOC_LIMIT_SET
+#   define  ALLOC_LIMIT_CLEAN           FTST_ALLOC_LIMIT_CLEAN
+
+#   define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
+#   define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
+
+#   define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR         
+#  endif
+
 #  ifndef   FTST_SUB_TEST
+
+
 
 static void*   __ftst_malloc_error()
 {
+    __ftst_alloc_test.error_happend = true;
     return (NULL);
 }
 
 void*   malloc(size_t size)
 {
-    if (__ftst_alloc_test.single_alloc_limit.is_active &&
-            __ftst_alloc_test.single_alloc_limit.d < size)
+    __ftst_alloc_test.error_happend = false;
+
+    if (__ftst_alloc_test.single_limit.is_active &&
+            __ftst_alloc_test.single_limit.d < size)
         return (__ftst_malloc_error());
-    if (__ftst_alloc_test.alloc_limit.is_active)
+    if (__ftst_alloc_test.limit.is_active)
     {
-        if (__ftst_alloc_test.alloc_limit.d < size)
+        if (__ftst_alloc_test.limit.d < size)
             return (__ftst_malloc_error());
-        __ftst_alloc_test.alloc_limit.d -= size;
+        __ftst_alloc_test.limit.d -= size;
     }
-    if (__ftst_alloc_test.alloc_fail_timer.is_active)
+    if (__ftst_alloc_test.fail_counter.is_active)
     {
-        if (__ftst_alloc_test.alloc_fail_timer.d == 0)
+        if (__ftst_alloc_test.fail_counter.d == 0)
             return (__ftst_malloc_error());
-        __ftst_alloc_test.alloc_fail_timer.d--;
+        __ftst_alloc_test.fail_counter.d--;
     }
 
     return (libc_malloc(size));
@@ -232,6 +260,29 @@ void    free(void *p)
 
 /*******************************************************
 *******************************************************/
+
+/************************************************/
+/*					global data					*/
+
+typedef struct {
+    size_t      passed;
+    size_t      launched;
+}               __ftst_test_results;
+
+typedef struct {
+    FILE*       		stream;
+    FILE*       		table;
+    __ftst_test_results	test_results;
+    char const*			current_test;
+}               __ftst_global;
+
+__FTST_EXTERN __ftst_global __ftst_global_test;
+
+
+# define __FTST_IS_STREAM     (__ftst_global_test.stream != NULL)
+# define __FTST_IS_TABLE      (__ftst_global_test.table  != NULL)
+
+/*************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -462,8 +513,10 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 
 static void    __ftst_init(FILE* stream_output, char const* result_file_name)
 {
+# if FTST_ALLOC_TEST
     libc_malloc = dlsym(RTLD_NEXT, "malloc");
     libc_free   = dlsym(RTLD_NEXT, "free");
+# endif
 
     __ftst_global_test.stream = stream_output;
 

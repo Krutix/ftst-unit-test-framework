@@ -1,17 +1,11 @@
 #include "ftst.h"
 
-void support_function(int a, int b)
-{
-    EQ(a * 2, b / 2);
-}
-
 TEST(equal_test)
 {
     EQ(1llu, 1);
     EQ(43, 43);
     EQ(43, 43, i, ASSERT);
     EQ(0., 0., g);
-    support_function(20, 80);
     LESS(15, 30);
     MORE(30, 15);
 }
@@ -35,7 +29,6 @@ TEST(string_cmp)
 TEST(error_test)
 {
     EQ(-1, 1);
-    support_function(40, 80);
     EQ(-1llu, -1llu, llu);
     LESS(-1llu, 1llu, llu);
     LESSEQ(-1llu, 1llu, llu);
