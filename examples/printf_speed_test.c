@@ -6,7 +6,10 @@
 #include "ftst.h"
 
 #define TEST_PRINTF(F, ...) printf(F, __VA_ARGS__), fflush(stdout)
-/* fflush - force printf write, because standart printf cheat and dont write data on screen with every call (>2x faster without fflush). Dont use it with your ft_printf */
+/*
+**  fflush - force printf write data on screen, because standard printf cheat and dont write data on screen with every call (>2x faster without fflush)
+**  Dont use it with your own ft_printf
+*/
 
 #define NAME(name) #name
 #define RESULT_FILE NAME(std) "_result"
