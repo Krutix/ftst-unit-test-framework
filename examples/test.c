@@ -38,7 +38,7 @@ TEST(error_test)
 
 int main()
 {
-    FTST_INIT(stdout);
+    FTST_INIT();
 
     RUNTEST(equal_test);
     RUNTEST(boolean_test);

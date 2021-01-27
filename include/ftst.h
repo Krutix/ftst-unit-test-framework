@@ -64,33 +64,6 @@
 # endif
 
 /************************************************/
-/*					COLORS						*/
-
-# if FTST_COLOR
-#  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
-#  define __FTST_ANSI_COLOR_GREEN   "\x1b[32m"
-#  define __FTST_ANSI_COLOR_YELLOW  "\x1b[33m"
-#  define __FTST_ANSI_COLOR_BLUE    "\x1b[34m"
-#  define __FTST_ANSI_COLOR_MAGENTA "\x1b[35m"
-#  define __FTST_ANSI_COLOR_CYAN    "\x1b[36m"
-#  define __FTST_ANSI_COLOR_RESET   "\x1b[0m"
-# else
-#  define __FTST_ANSI_COLOR_RED
-#  define __FTST_ANSI_COLOR_GREEN
-#  define __FTST_ANSI_COLOR_YELLOW
-#  define __FTST_ANSI_COLOR_BLUE
-#  define __FTST_ANSI_COLOR_MAGENTA
-#  define __FTST_ANSI_COLOR_CYAN
-#  define __FTST_ANSI_COLOR_RESET
-# endif
-
-# define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_SUCCESS(str)         __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
-
-/************************************************/
 /*					global data					*/
 
 typedef struct {
@@ -166,6 +139,30 @@ __FTST_EXTERN __ftst_global __ftst_global_test;
 **                   PRETTY_PRINT					**
 *****************************************************/
 
+# if FTST_COLOR
+#  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
+#  define __FTST_ANSI_COLOR_GREEN   "\x1b[32m"
+#  define __FTST_ANSI_COLOR_YELLOW  "\x1b[33m"
+#  define __FTST_ANSI_COLOR_BLUE    "\x1b[34m"
+#  define __FTST_ANSI_COLOR_MAGENTA "\x1b[35m"
+#  define __FTST_ANSI_COLOR_CYAN    "\x1b[36m"
+#  define __FTST_ANSI_COLOR_RESET   "\x1b[0m"
+# else
+#  define __FTST_ANSI_COLOR_RED
+#  define __FTST_ANSI_COLOR_GREEN
+#  define __FTST_ANSI_COLOR_YELLOW
+#  define __FTST_ANSI_COLOR_BLUE
+#  define __FTST_ANSI_COLOR_MAGENTA
+#  define __FTST_ANSI_COLOR_CYAN
+#  define __FTST_ANSI_COLOR_RESET
+# endif
+
+# define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_SUCCESS(str)         __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
+
 static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 {
     va_list arg_list;
@@ -178,8 +175,10 @@ static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 
 # if !(FTST_SILENT)
 #  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_global_test.stream, __VA_ARGS__)
+#  define __FTST_FFLUSH_STREAM()            fflush(__ftst_global_test.stream)
 # else
 #  define __FTST_WRITE_TO_STREAM(...)
+#  define __FTST_FFLUSH_STREAM()
 # endif
 
 # define __FTST_WRITE_TO_TABLE(...)         __ftst_write_to_stream(__ftst_global_test.table, __VA_ARGS__)
@@ -451,6 +450,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     }
     
     __FTST_WRITE_ERROR_TO_STREAM("\n");
+    __FTST_FFLUSH_STREAM();
 }
 
 /****************************************************/
@@ -633,6 +633,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
 
     __ftst_pretty_print_start(test_case_name);
 
+    __FTST_FFLUSH_STREAM();
     time = ftst_start_timer();
     test_case();
     time = ftst_time(time);
