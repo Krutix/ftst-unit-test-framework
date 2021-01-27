@@ -25,7 +25,7 @@
 #  define       FTST_ERROR_MESSAGE  true
 # endif
 # ifndef        FTST_ALLOC_TEST
-#  define       FTST_ALLOC_TEST     true
+#  define       FTST_ALLOC_TEST     false
 # endif
 # ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
@@ -137,7 +137,7 @@
     }
 
 # if FTST_ASSERT_LEVEL >= 1
-# define FTST_STATIC_ASSERT(expr, error_message)                \
+# define  FTST_STATIC_ASSERT(expr, error_message)                \
 		__FTST_STATIC_ASSERT(expr, error_message)
 # else
 #  define FTST_STATIC_ASSERT(expr, error_message)
@@ -198,11 +198,18 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 #  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
 #  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN(value)    __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
-#  define   FTST_ALLOC_IF_ERROR(check)          \
-    if (__ftst_alloc_test.error_happend)        \
-    {                                           \
-        check;                                  \
+#  define   FTST_ALLOC_IF_ERROR(check)                      \
+    if (__ftst_alloc_test.error_happend)                    \
+    {                                                       \
+        check;                                              \
     }
+
+#  define   FTST_ALLOC_IF_ERROR_ELSE(check, check_else)     \
+            FTST_ALLOC_IF_ERROR(check)                      \
+            else                                            \
+            {                                               \
+                check_else;                                 \
+            }
 
 #  if       FTST_NAMESPACE
 #   define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
@@ -214,12 +221,11 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 #   define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
 #   define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
 
-#   define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR         
+#   define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR
+#   define  ALLOC_IF_ERROR_ELSE         FTST_ALLOC_IF_ERROR_ELSE
 #  endif
 
 #  ifndef   FTST_SUB_TEST
-
-
 
 static void*   __ftst_malloc_error()
 {
@@ -286,17 +292,6 @@ __FTST_EXTERN __ftst_global __ftst_global_test;
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
-
-# define __FTST_FATAL_ERROR(error_message)          __ftst_fatal_error(__LINE__, __FUNCTION__, error_message)
-# define __FTST_FATAL_CASE_ERROR(error_message)     __ftst_fatal_error(__LINE__, __ftst_global_test.current_test, error_message)
-
-static void    __ftst_fatal_error(size_t line, char const* function_name, char const* error_message)
-{
-    fprintf(stderr,
-        __FTST_PRETTY_FAILED("ftst error\n") "%zu: [%s] - \"%s\" \n",
-		line, function_name, error_message);
-    exit(-1);
-}
 
 /*
 **                           MULTI MACRO
@@ -525,7 +520,7 @@ static void    __ftst_init(FILE* stream_output, char const* result_file_name)
         char file_with_exp[512];
         snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", result_file_name, ".csv");
         __ftst_global_test.table = fopen(file_with_exp, "w");
-        if (__ftst_global_test.table == NULL) __FTST_FATAL_ERROR("The file cant be created");
+        __FTST_RUNTIME_ASSERT(__ftst_global_test.table == NULL, "Can't create file");
     }
 }
 
