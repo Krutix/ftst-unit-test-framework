@@ -5,6 +5,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
+# include <stdarg.h>
 # include <stdint.h>
 # include <stdbool.h>
 
@@ -89,6 +90,24 @@
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
+/************************************************/
+/*					global data					*/
+
+typedef struct {
+    size_t      passed;
+    size_t      launched;
+}               __ftst_test_results;
+
+typedef struct {
+    FILE*       		stream;
+    FILE*       		table;
+    __ftst_test_results	test_results;
+    char const*			current_test;
+}               __ftst_global;
+
+__FTST_EXTERN __ftst_global __ftst_global_test;
+
+
 /*****************************************************
 **                   ASSERTION						**
 *****************************************************/
@@ -144,6 +163,34 @@
 # endif
 
 /*****************************************************
+**                   PRETTY_PRINT					**
+*****************************************************/
+
+static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
+{
+    va_list arg_list;
+
+    va_start(arg_list, format);
+    if (stream)
+        vfprintf(stream, format, arg_list);
+    va_end(arg_list);
+}
+
+# if !(FTST_SILENT)
+#  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_global_test.stream, __VA_ARGS__)
+# else
+#  define __FTST_WRITE_TO_STREAM(...)
+# endif
+
+# define __FTST_WRITE_TO_TABLE(...)         __ftst_write_to_stream(__ftst_global_test.table, __VA_ARGS__)
+
+# if (FTST_ERROR_MESSAGE)
+#  define __FTST_WRITE_ERROR_TO_STREAM(...)  __ftst_write_to_stream(__ftst_global_test.stream, __VA_ARGS__)
+# else
+#  define __FTST_WRITE_ERROR_TO_STREAM(...)
+# endif
+
+/*****************************************************
 **                  ALLOCATION TEST					**
 *****************************************************/
 
@@ -163,6 +210,12 @@
 
 __FTST_EXTERN void*(*libc_malloc)(size_t);
 __FTST_EXTERN void(*libc_free)(void*);
+
+static void __ftst_init_alloc(void)
+{
+    libc_malloc = dlsym(RTLD_NEXT, "malloc");
+    libc_free   = dlsym(RTLD_NEXT, "free");
+}
 
 typedef struct {
     bool      is_active;
@@ -266,27 +319,6 @@ void    free(void *p)
 
 /*******************************************************
 *******************************************************/
-
-/************************************************/
-/*					global data					*/
-
-typedef struct {
-    size_t      passed;
-    size_t      launched;
-}               __ftst_test_results;
-
-typedef struct {
-    FILE*       		stream;
-    FILE*       		table;
-    __ftst_test_results	test_results;
-    char const*			current_test;
-}               __ftst_global;
-
-__FTST_EXTERN __ftst_global __ftst_global_test;
-
-
-# define __FTST_IS_STREAM     (__ftst_global_test.stream != NULL)
-# define __FTST_IS_TABLE      (__ftst_global_test.table  != NULL)
 
 /*************************************************/
 
@@ -399,32 +431,26 @@ void    __FTST_TEST_CASE(test_name)(void)
 /****************************************************/
 /*					ERROR MESSAGE					*/
 
-# if FTST_ERROR_MESSAGE
-#  define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
+# define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
         __ftst_test_error(__LINE__, __ftst_global_test.current_test, \
                     test_name, actual, actual_str, expect, expect_str)
-# else
-#  define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str)
-# endif
 
 /*TODO think about naming expression, condition etc*/
 static void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
                             char const *actual, const char* actual_value, char const* expect, char const* expect_value)
 {
-    if (__FTST_IS_STREAM)
+    __FTST_WRITE_ERROR_TO_STREAM(
+        "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
+        "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
+            test_name, test_case_name, line, actual_value, actual);
+    if (expect != NULL)
     {
-        fprintf(__ftst_global_test.stream,
-            "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-            "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
-                test_name, test_case_name, line, actual_value, actual);
-        if (expect != NULL)
-        {
-            fprintf(__ftst_global_test.stream,
-                ",   expected: " __FTST_PRETTY_INFO("%s")"[%s]",
-                expect_value, expect);
-        }
-        fprintf(__ftst_global_test.stream, "\n");
+        __FTST_WRITE_ERROR_TO_STREAM(
+            ",   expected: " __FTST_PRETTY_INFO("%s")"[%s]",
+            expect_value, expect);
     }
+    
+    __FTST_WRITE_ERROR_TO_STREAM("\n");
 }
 
 /****************************************************/
@@ -506,22 +532,29 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 **			Initialization and execution tests				**
 *************************************************************/
 
-static void    __ftst_init(FILE* stream_output, char const* result_file_name)
+static void    __ftst_init_table(char const *table_name)
 {
-# if FTST_ALLOC_TEST
-    libc_malloc = dlsym(RTLD_NEXT, "malloc");
-    libc_free   = dlsym(RTLD_NEXT, "free");
-# endif
-
-    __ftst_global_test.stream = stream_output;
-
-    if (result_file_name != NULL)
+    if (table_name != NULL)
     {
         char file_with_exp[512];
-        snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", result_file_name, ".csv");
+        snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", table_name, ".csv");
         __ftst_global_test.table = fopen(file_with_exp, "w");
-        __FTST_RUNTIME_ASSERT(__ftst_global_test.table == NULL, "Can't create file");
+        __FTST_RUNTIME_ASSERT(__ftst_global_test.table != NULL, "Can't create file");
     }
+}
+
+static void    __ftst_init_stream(FILE* stream_output)
+{
+    __ftst_global_test.stream = stream_output;
+}
+
+static void    __ftst_init(FILE* stream_output, char const* table_name)
+{
+# if FTST_ALLOC_TEST
+    __ftst_init_alloc();
+# endif
+    __ftst_init_stream(stream_output);
+    __ftst_init_table(table_name);
 }
 
 # define __FTST_INIT_2(stream_output, result_file_name)		__ftst_init(stream_output, result_file_name)
@@ -532,7 +565,7 @@ static void    __ftst_init(FILE* stream_output, char const* result_file_name)
 
 static void    __ftst_exit(void)
 {
-    if (__FTST_IS_TABLE)
+    if (__ftst_global_test.table)
         fclose(__ftst_global_test.table);
 
     __ftst_global_test.table   = NULL;
@@ -544,55 +577,42 @@ static void    __ftst_exit(void)
 /********************************************************/
 /*					PRINT RESULTS						*/
 
-static void    __ftst_pretty_print_start(char const* test_case_name)
+# define __FTST_PRETTY_TEST_STATUS(status, test_case_name) "%-20s : " __FTST_PRETTY_TEST_CASE_NAME("%s"), \
+                                                          status,                          test_case_name
+
+# define __FTST_PRETTY_START_TEST(test_case_name)        __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_PROCESSED( "[processed]"  ), test_case_name)
+# define __FTST_PRETTY_SUCCESS_TEST(test_case_name)      __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_SUCCESS(   "[success]"    ), test_case_name)
+# define __FTST_PRETTY_FAILED_TEST(test_case_name)       __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_FAILED(    "[failed]"     ), test_case_name)
+
+static void    __ftst_pretty_print_start(char const *test_case_name)
 {
-# if !(FTST_SILENT)
-    if (__FTST_IS_STREAM)
-        fprintf(__ftst_global_test.stream,
-            __FTST_PRETTY_PROCESSED("[processed]") " : " __FTST_PRETTY_TEST_CASE_NAME("%s") "\n",
-                                                                            test_case_name);
-# endif
+    __FTST_WRITE_TO_STREAM(__FTST_PRETTY_START_TEST(test_case_name));
+    __FTST_WRITE_TO_STREAM("\n");
 }
 
 static void    __ftst_pretty_print_result(
         char const* test_case_name, __ftst_test_results test, clock_t time)
 {
-# if !(FTST_SILENT)
-    if (__FTST_IS_STREAM)
-    {
-        if (test.passed == test.launched)
-            fprintf(__ftst_global_test.stream, __FTST_PRETTY_SUCCESS("[success]"));
-        else
-            fprintf(__ftst_global_test.stream, __FTST_PRETTY_FAILED("[failed]"));
+    if (test.passed == test.launched)
+        __FTST_WRITE_TO_STREAM(__FTST_PRETTY_SUCCESS_TEST(test_case_name));
+    else
+        __FTST_WRITE_TO_STREAM(__FTST_PRETTY_FAILED_TEST(test_case_name));
 
-        fprintf(__ftst_global_test.stream,
-            " : " __FTST_PRETTY_TEST_CASE_NAME("%s") " | ",
-                                        test_case_name);
+    __FTST_WRITE_TO_STREAM(" | ");
 
-        if (test.passed == test.launched)
-            fprintf(__ftst_global_test.stream,
-                __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
-                                    test.passed,                   test.launched);
-        else
-            fprintf(__ftst_global_test.stream,
-                __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
-                                    test.passed,                   test.launched);
+    if (test.passed == test.launched)
+        __FTST_WRITE_TO_STREAM(
+            __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                test.passed,                   test.launched);
+    else
+        __FTST_WRITE_TO_STREAM(
+            __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+                                test.passed,                   test.launched);
 
-        fprintf(__ftst_global_test.stream,
-            " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
-                                time / 1000.);
-    }
-# endif
-}
-
-static void __ftst_pretty_print_table(
-		char const* test_case_name, __ftst_test_results test, clock_t time)
-{
-    if (__FTST_IS_TABLE)
-    {
-        fprintf(__ftst_global_test.table, "%s,%zu/%zu,%.3fms\n",
-            test_case_name, test.passed, test.launched, time / 1000.);
-    }
+    __FTST_WRITE_TO_STREAM(
+        " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
+                            time / 1000.);
+    
 }
 
 /********************************************************/
@@ -618,7 +638,9 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
     time = ftst_time(time);
 
     __ftst_pretty_print_result(test_case_name, __ftst_global_test.test_results, time);
-    __ftst_pretty_print_table(test_case_name, __ftst_global_test.test_results, time);
+
+    __FTST_WRITE_TO_TABLE("%s,%zu/%zu,%.3fms\n",
+        test_case_name, __ftst_global_test.test_results.passed, __ftst_global_test.test_results.launched, time);
 
     __ftst_global_test.current_test = NULL;
 }
