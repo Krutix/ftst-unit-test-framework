@@ -580,7 +580,7 @@ static void    __ftst_exit(void)
 # define __FTST_PRETTY_TEST_STATUS(status, test_case_name) "%-20s : " __FTST_PRETTY_TEST_CASE_NAME("%s"), \
                                                           status,                          test_case_name
 
-# define __FTST_PRETTY_START_TEST(test_case_name)        __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_PROCESSED( "[processed]"  ), test_case_name)
+# define __FTST_PRETTY_START_TEST(test_case_name)        __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_PROCESSED( "[launched]"  ), test_case_name)
 # define __FTST_PRETTY_SUCCESS_TEST(test_case_name)      __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_SUCCESS(   "[success]"    ), test_case_name)
 # define __FTST_PRETTY_FAILED_TEST(test_case_name)       __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_FAILED(    "[failed]"     ), test_case_name)
 
@@ -638,7 +638,10 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
     test_case();
     time = ftst_time(time);
 
+	if (__ftst_global_test.test_results.passed == __ftst_global_test.test_results.launched)
+		__FTST_WRITE_TO_STREAM("\033[A\033[2K");
     __ftst_pretty_print_result(test_case_name, __ftst_global_test.test_results, time);
+
 
     __FTST_WRITE_TO_TABLE("%s,%zu/%zu,%.3fms\n",
         test_case_name, __ftst_global_test.test_results.passed, __ftst_global_test.test_results.launched, time);
