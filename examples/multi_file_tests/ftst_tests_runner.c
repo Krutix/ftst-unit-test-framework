@@ -10,5 +10,5 @@ int main()
     RUNTEST(ft_strlen_basic_test);
     RUNTEST(ft_memcpy_basic_test);
 
-    FTST_EXIT();
+    return FTST_EXIT();
 }

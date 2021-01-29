@@ -45,5 +45,5 @@ int main()
     RUNTEST(string_cmp);
     RUNTEST(error_test);
 
-    FTST_EXIT();
+    return FTST_EXIT();
 }

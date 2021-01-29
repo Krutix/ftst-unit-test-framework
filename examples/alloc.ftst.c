@@ -34,5 +34,5 @@ int main()
 
     RUNTEST(malloc_test);
 
-    FTST_EXIT();
+    return FTST_EXIT();
 }

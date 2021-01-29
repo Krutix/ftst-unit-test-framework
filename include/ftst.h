@@ -2,7 +2,6 @@
 # define FTST_H
 
 # include <time.h>
-# include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
 # include <stdarg.h>
@@ -69,16 +68,15 @@
 typedef struct {
     size_t      passed;
     size_t      launched;
+    char const*	test_name;
 }               __ftst_test_results;
 
 typedef struct {
     FILE*       		stream;
     FILE*       		table;
-    __ftst_test_results	test_results;
-    char const*			current_test;
 }               __ftst_global;
 
-__FTST_EXTERN __ftst_global __ftst_global_test;
+__FTST_EXTERN __ftst_global __ftst_g;
 
 
 /*****************************************************
@@ -175,17 +173,17 @@ static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 }
 
 # if !(FTST_SILENT)
-#  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_global_test.stream, __VA_ARGS__)
-#  define __FTST_FFLUSH_STREAM()            fflush(__ftst_global_test.stream)
+#  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_g.stream, __VA_ARGS__)
+#  define __FTST_FFLUSH_STREAM()            fflush(__ftst_g.stream)
 # else
 #  define __FTST_WRITE_TO_STREAM(...)
 #  define __FTST_FFLUSH_STREAM()
 # endif
 
-# define __FTST_WRITE_TO_TABLE(...)         __ftst_write_to_stream(__ftst_global_test.table, __VA_ARGS__)
+# define __FTST_WRITE_TO_TABLE(...)         __ftst_write_to_stream(__ftst_g.table, __VA_ARGS__)
 
 # if (FTST_ERROR_MESSAGE)
-#  define __FTST_WRITE_ERROR_TO_STREAM(...)  __ftst_write_to_stream(__ftst_global_test.stream, __VA_ARGS__)
+#  define __FTST_WRITE_ERROR_TO_STREAM(...)  __ftst_write_to_stream(__ftst_g.stream, __VA_ARGS__)
 # else
 #  define __FTST_WRITE_ERROR_TO_STREAM(...)
 # endif
@@ -410,19 +408,19 @@ void    free(void *p)
 **              	TEST CASE						**
 *****************************************************/
 
-typedef     void(*__ftst_test_t)();
+typedef     void(*__ftst_test_t)(__ftst_test_results*);
 
 # define FTST_TEST(test_name)                           \
-void    __FTST_TEST_CASE(test_name)(void)
+void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 
 /****************************************************/
 /*					TEST BRANCH						*/
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
-    __ftst_global_test.test_results.launched++;         \
+    __ftst_current->launched++;                         \
     if (cond) {                                         \
-        __ftst_global_test.test_results.passed++;       \
+        __ftst_current->passed++;                       \
     } else {                                            \
         error_funct;                                    \
     }                                                   \
@@ -431,11 +429,6 @@ void    __FTST_TEST_CASE(test_name)(void)
 /****************************************************/
 /*					ERROR MESSAGE					*/
 
-# define __FTST_TEST_ERROR(test_name, actual, actual_str, expect, expect_str) \
-        __ftst_test_error(__LINE__, __ftst_global_test.current_test, \
-                    test_name, actual, actual_str, expect, expect_str)
-
-/*TODO think about naming expression, condition etc*/
 static void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
                             char const *actual, const char* actual_value, char const* expect, char const* expect_value)
 {
@@ -453,6 +446,10 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     __FTST_WRITE_ERROR_TO_STREAM("\n");
     __FTST_FFLUSH_STREAM();
 }
+
+# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str) \
+        __ftst_test_error(__LINE__, __ftst_current->test_name, \
+                    _test_name, actual, actual_str, expect, expect_str)
 
 /****************************************************/
 /*					TEST TEMPLATES					*/
@@ -533,20 +530,20 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 **			Initialization and execution tests				**
 *************************************************************/
 
-static void    __ftst_init_table(char const *table_name)
+static void    __ftst_init_table(char const* table_name)
 {
     if (table_name != NULL)
     {
         char file_with_exp[512];
         snprintf(file_with_exp, sizeof(file_with_exp), "%s%s", table_name, ".csv");
-        __ftst_global_test.table = fopen(file_with_exp, "w");
-        __FTST_RUNTIME_ASSERT(__ftst_global_test.table != NULL, "Can't create file");
+        __ftst_g.table = fopen(file_with_exp, "w");
+        __FTST_RUNTIME_ASSERT(__ftst_g.table != NULL, "Can't create file");
     }
 }
 
 static void    __ftst_init_stream(FILE* stream_output)
 {
-    __ftst_global_test.stream = stream_output;
+    __ftst_g.stream = stream_output;
 }
 
 static void    __ftst_init(FILE* stream_output, char const* table_name)
@@ -558,22 +555,29 @@ static void    __ftst_init(FILE* stream_output, char const* table_name)
     __ftst_init_table(table_name);
 }
 
-# define __FTST_INIT_2(stream_output, result_file_name)		__ftst_init(stream_output, result_file_name)
+# define __FTST_INIT_2(stream_output, result_file_name) \
+        __ftst_init(stream_output, result_file_name);    \
+        __ftst_test_results __ftst_main_test = (__ftst_test_results) { 0, 0, "main"}; \
+        __ftst_test_results* __ftst_current = &__ftst_main_test
+
 # define __FTST_INIT_1(stream_output)						__FTST_INIT_2(stream_output, NULL)
 # define __FTST_INIT_0()									__FTST_INIT_1(stdout)
 
 # define FTST_INIT(...) __FTST_MULTI_MACRO(__FTST_INIT, __VA_ARGS__)
 
-static void    __ftst_exit(void)
+static int    __ftst_exit(__ftst_test_results __ftst_results)
 {
-    if (__ftst_global_test.table)
-        fclose(__ftst_global_test.table);
+    if (__ftst_g.table)
+        fclose(__ftst_g.table);
 
-    __ftst_global_test.table   = NULL;
-    __ftst_global_test.stream  = NULL;
+    __ftst_g.table   = NULL;
+    __ftst_g.stream  = NULL;
+    if (__ftst_results.passed == __ftst_results.launched)
+        return (0);
+    return (-1);
 }
 
-# define FTST_EXIT()	__ftst_exit()
+# define FTST_EXIT()	__ftst_exit(__ftst_main_test)
 
 /********************************************************/
 /*					PRINT RESULTS						*/
@@ -619,35 +623,38 @@ static void    __ftst_pretty_print_result(
 /********************************************************/
 /*					TEST EXECUTION						*/
 
-# define FTST_RUNTEST(test_name) \
-    __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name))
+# define FTST_RUNTEST(test_name)                                                                \
+    {                                                                                           \
+        __ftst_test_results __results =                                                         \
+                __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name));\
+        __ftst_current->passed      += __results.passed;                                        \
+        __ftst_current->launched    += __results.launched;                                      \
+    }
 
 static clock_t ftst_start_timer() { return clock(); }
 static clock_t ftst_time(clock_t start) { return clock() - start; }
 
-static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
+static __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
-    clock_t     time;
+    clock_t             time;
+    __ftst_test_results test_results = (__ftst_test_results){ 0, 0, test_case_name };
 
-    __ftst_global_test.test_results = (__ftst_test_results){ 0, 0 };
-    __ftst_global_test.current_test = test_case_name;
 
     __ftst_pretty_print_start(test_case_name);
 
     __FTST_FFLUSH_STREAM();
     time = ftst_start_timer();
-    test_case();
+    test_case(&test_results);
     time = ftst_time(time);
 
-	if (__ftst_global_test.test_results.passed == __ftst_global_test.test_results.launched)
+	if (test_results.passed == test_results.launched)
 		__FTST_WRITE_TO_STREAM(__FTST_ANSI_CLEAR_LINE);
-    __ftst_pretty_print_result(test_case_name, __ftst_global_test.test_results, time);
+    __ftst_pretty_print_result(test_case_name, test_results, time);
 
 
     __FTST_WRITE_TO_TABLE("%s,%zu/%zu,%.3fms\n",
-        test_case_name, __ftst_global_test.test_results.passed, __ftst_global_test.test_results.launched, time);
-
-    __ftst_global_test.current_test = NULL;
+        test_case_name, test_results.passed, test_results.launched, time);
+    return (test_results);
 }
 
 #endif

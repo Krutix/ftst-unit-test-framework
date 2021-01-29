@@ -31,7 +31,7 @@ def create_test_run_main(files):
         ftst_test_runner.write(f"\t{test.replace('TEST', 'RUNTEST')};\n")
 
     ftst_test_runner.write("\n")
-    ftst_test_runner.write("\tFTST_EXIT();\n")
+    ftst_test_runner.write("\treturn FTST_EXIT();\n")
     ftst_test_runner.write("}\n")
 
 
