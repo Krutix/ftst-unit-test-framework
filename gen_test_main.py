@@ -31,6 +31,7 @@ def create_test_run_main(files):
         ftst_test_runner.write(f"\t{test.replace('TEST', 'RUNTEST')};\n")
 
     ftst_test_runner.write("\n")
+    # return test status (0 - success, -1 fail)
     ftst_test_runner.write("\treturn FTST_EXIT();\n")
     ftst_test_runner.write("}\n")
 
