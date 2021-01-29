@@ -147,6 +147,7 @@ __FTST_EXTERN __ftst_global __ftst_global_test;
 #  define __FTST_ANSI_COLOR_MAGENTA "\x1b[35m"
 #  define __FTST_ANSI_COLOR_CYAN    "\x1b[36m"
 #  define __FTST_ANSI_COLOR_RESET   "\x1b[0m"
+#  define __FTST_ANSI_CLEAR_LINE    "\033[A\033[2K"
 # else
 #  define __FTST_ANSI_COLOR_RED
 #  define __FTST_ANSI_COLOR_GREEN
@@ -257,11 +258,11 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
     }
 
 #  define   FTST_ALLOC_IF_ERROR_ELSE(check, check_else)     \
-            FTST_ALLOC_IF_ERROR(check)                      \
-            else                                            \
-            {                                               \
-                check_else;                                 \
-            }
+    FTST_ALLOC_IF_ERROR(check)                              \
+    else                                                    \
+    {                                                       \
+        check_else;                                         \
+    }
 
 #  if       FTST_NAMESPACE
 #   define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
@@ -639,7 +640,7 @@ static void    __ftst_run_test(__ftst_test_t test_case, char const* test_case_na
     time = ftst_time(time);
 
 	if (__ftst_global_test.test_results.passed == __ftst_global_test.test_results.launched)
-		__FTST_WRITE_TO_STREAM("\033[A\033[2K");
+		__FTST_WRITE_TO_STREAM(__FTST_ANSI_CLEAR_LINE);
     __ftst_pretty_print_result(test_case_name, __ftst_global_test.test_results, time);
 
 
