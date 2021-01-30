@@ -11,6 +11,7 @@ def get_all_tests(files : [str]) -> [str]: # get list of test files and fetch al
 def create_test_run_main(files):
     ftst_test_runner = open('ftst_test_runner.c', 'w')
 
+    ftst_test_runner.write("#define FTST_MAIN\n")
     ftst_test_runner.write("#include \"ftst.h\"\n")
     ftst_test_runner.write("\n")
 

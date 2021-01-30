@@ -1,5 +1,5 @@
 
-#include "ft_string.h"
+#include "_ft_string.h"
 
 #define FTST_SUB_TEST
 #include "ftst.h"
