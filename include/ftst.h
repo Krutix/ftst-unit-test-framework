@@ -206,6 +206,7 @@ static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 #   include <malloc/malloc.h>
 #  endif
 #  include <dlfcn.h>
+#  include <errno.h>
 /*
 ** On linux use -ldl flag to link dlfcn lib
 */
@@ -282,9 +283,96 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 
 #  ifndef   FTST_SUB_TEST
 
+/*              LIST MANAGMENT FUNCTIONS          */
+
+typedef struct
+{
+	__ftst_list     *next;
+	void			*ptr;
+	size_t			size;
+}					__ftst_list;
+
+static __ftst_list  *__ftst_memory_aggregator;
+
+static __ftst_list	*__ftst_list_find(__ftst_list *begin_list, void *ptr_ref)
+{
+	while (begin_list)
+	{
+		if (begin_list->ptr == ptr_ref)
+			return (begin_list);
+		begin_list = begin_list->next;
+	}
+	return (NULL);
+}
+
+static __ftst_list	*__ftst_create_list(void *ptr, size_t size)
+{
+	__ftst_list *new_node;
+
+	new_node = libc_malloc(sizeof(__ftst_list));
+    __FTST_RUNTIME_ASSERT(new_node, "malloc can't allocate enough memory");
+	new_node->next = NULL;
+	new_node->ptr = ptr;
+	new_node->size = size;
+	return (new_node);
+}
+
+static void __ftst_list_push_front(__ftst_list **begin_list, __ftst_list *node)
+{
+	node->next = *begin_list;
+	*begin_list = node;
+}
+
+static void	__ftst_list_remove_if(__ftst_list **begin_list, void* ptr_ref)
+{
+	t_list	*buff;
+	t_list	*prev;
+	t_list	*next;
+
+	buff = *begin_list;
+	prev = NULL;
+	while (buff)
+	{
+		next = buff->next;
+		if (buff->ptr, ptr_ref)
+		{
+			if (prev)
+				prev->next = buff->next;
+			else
+				*begin_list = buff->next;
+			free(buff);
+            return ;
+		}
+		else
+			prev = buff;
+		buff = next;
+	}
+}
+
+static void	__ftst_list_clear(__ftst_list *begin_list)
+{
+	__ftst_list *buff;
+
+	while (begin_list)
+	{
+		buff = begin_list;
+		begin_list = buff->next;
+		free(buff);
+	}
+}
+
+
+size_t        ftst_malloc_size(void *ptr)
+{
+    __ftst_list *find_ptr = __ftst_list_find(__ftst_memory_aggregator, ptr);
+    __FTST_RUNTIME_ASSERT(find_ptr, "can't find memory in aggregator");
+    return (find_ptr->size);
+}
+
 static void*   __ftst_malloc_error()
 {
     __ftst_alloc_test.error_happend = true;
+    errno = ENOMEM;
     return (NULL);
 }
 
@@ -307,7 +395,6 @@ void*   malloc(size_t size)
             return (__ftst_malloc_error());
         __ftst_alloc_test.fail_counter.d--;
     }
-
     return (libc_malloc(size));
 }
 
@@ -399,8 +486,10 @@ void    free(void *p)
 # define __FTST_TYPE_llx                __FTST_TYPE_llu
 # define __FTST_TYPE_p                  void*
 # define __FTST_TYPE_zu                 size_t
+# define __FTST_TYPE_gf                 float
 # define __FTST_TYPE_g                  double
 # define __FTST_TYPE_Lg                 long double
+# define __FTST_TYPE_ff                 float
 # define __FTST_TYPE_f                  double
 # define __FTST_TYPE_Lf                 long double
 # define __FTST_TYPE_c                  char
