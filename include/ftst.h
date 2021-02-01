@@ -56,11 +56,7 @@
 #  define RUNTEST       FTST_RUNTEST
 # endif
 
-# ifndef FTST_MAIN
-#  define FTST_SUB_TEST
-# endif
-
-# ifdef     FTST_SUB_TEST
+# ifndef     FTST_MAIN_FILE
 #  define   __FTST_EXTERN   extern
 # else
 #  define   __FTST_EXTERN
@@ -166,7 +162,8 @@ __FTST_EXTERN __ftst_global __ftst_g;
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
-static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
+# ifdef FTST_MAIN_FILE
+void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 {
     va_list arg_list;
 
@@ -175,6 +172,9 @@ static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
         vfprintf(stream, format, arg_list);
     va_end(arg_list);
 }
+# else
+extern void    __ftst_write_to_stream(FILE* stream, char const* format, ...);
+# endif
 
 # if !(FTST_SILENT)
 #  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_g.stream, __VA_ARGS__)
@@ -211,14 +211,6 @@ static void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
 ** On linux use -ldl flag to link dlfcn lib
 */
 
-__FTST_EXTERN void*(*libc_malloc)(size_t);
-__FTST_EXTERN void(*libc_free)(void*);
-
-static void __ftst_init_alloc(void)
-{
-    libc_malloc = dlsym(RTLD_NEXT, "malloc");
-    libc_free   = dlsym(RTLD_NEXT, "free");
-}
 
 typedef struct {
     bool      is_active;
@@ -246,55 +238,57 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
     }
 
 #  define   FTST_ALLOC_COUNTER_SET(value)           __FTST_ALLOC_SET(value, __ftst_alloc_test.fail_counter)
-#  define   FTST_ALLOC_COUNTER_CLEAN(value)         __FTST_ALLOC_CLEAN(__ftst_alloc_test.fail_counter)
+#  define   FTST_ALLOC_COUNTER_CLEAN()              __FTST_ALLOC_CLEAN(__ftst_alloc_test.fail_counter)
 
 #  define   FTST_ALLOC_LIMIT_SET(value)             __FTST_ALLOC_SET(value, __ftst_alloc_test.limit)
-#  define   FTST_ALLOC_LIMIT_CLEAN(value)           __FTST_ALLOC_CLEAN(__ftst_alloc_test.limit)
+#  define   FTST_ALLOC_LIMIT_CLEAN()                __FTST_ALLOC_CLEAN(__ftst_alloc_test.limit)
 
 #  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
-#  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN(value)    __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
+#  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN()         __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
-#  define   FTST_ALLOC_IF_ERROR(check)                      \
+#  define   FTST_ALLOC_CLEAN()              \
+    {                                       \
+        FTST_ALLOC_SINGLE_LIMIT_CLEAN();    \
+        FTST_ALLOC_LIMIT_CLEAN();           \
+        FTST_ALLOC_COUNTER_CLEAN();         \
+    }
+
+#  define   FTST_ALLOC_IF_ERROR(true_branch)                \
     if (__ftst_alloc_test.error_happend)                    \
     {                                                       \
-        check;                                              \
+        true_branch;                                        \
     }
 
-#  define   FTST_ALLOC_IF_ERROR_ELSE(check, check_else)     \
-    FTST_ALLOC_IF_ERROR(check)                              \
-    else                                                    \
+#  define   FTST_ALLOC_IF_ERROR_ELSE(true_branch, false_branch) \
     {                                                       \
-        check_else;                                         \
+        FTST_ALLOC_IF_ERROR(true_branch)                    \
+        else                                                \
+        {                                                   \
+            false_branch;                                   \
+        }                                                   \
     }
 
-#  if       FTST_NAMESPACE
-#   define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
-#   define  ALLOC_COUNTER_CLEAN         FTST_ALLOC_COUNTER_CLEAN
 
-#   define  ALLOC_LIMIT_SET             FTST_ALLOC_LIMIT_SET
-#   define  ALLOC_LIMIT_CLEAN           FTST_ALLOC_LIMIT_CLEAN
+#  ifdef FTST_MAIN_FILE
 
-#   define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
-#   define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
+static void*(*libc_malloc)(size_t);
+static void(*libc_free)(void*);
 
-#   define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR
-#   define  ALLOC_IF_ERROR_ELSE         FTST_ALLOC_IF_ERROR_ELSE
 #  endif
-
-#  ifndef   FTST_SUB_TEST
 
 /*              LIST MANAGMENT FUNCTIONS          */
 
-typedef struct
+#  ifdef FTST_MAIN_FILE
+typedef struct      __ftst_list_s
 {
-	__ftst_list     *next;
-	void			*ptr;
-	size_t			size;
+	struct __ftst_list_s*   next;
+	void*                   ptr;
+	size_t                  size;
 }					__ftst_list;
 
-static __ftst_list  *__ftst_memory_aggregator;
+static __ftst_list*  __ftst_memory_aggregator;
 
-static __ftst_list	*__ftst_list_find(__ftst_list *begin_list, void *ptr_ref)
+static __ftst_list*	__ftst_list_find(__ftst_list *begin_list, void *ptr_ref)
 {
 	while (begin_list)
 	{
@@ -305,7 +299,7 @@ static __ftst_list	*__ftst_list_find(__ftst_list *begin_list, void *ptr_ref)
 	return (NULL);
 }
 
-static __ftst_list	*__ftst_create_list(void *ptr, size_t size)
+static __ftst_list*	__ftst_create_list(void *ptr, size_t size)
 {
 	__ftst_list *new_node;
 
@@ -317,17 +311,17 @@ static __ftst_list	*__ftst_create_list(void *ptr, size_t size)
 	return (new_node);
 }
 
-static void __ftst_list_push_front(__ftst_list **begin_list, __ftst_list *node)
+static void     __ftst_list_push_front(__ftst_list **begin_list, __ftst_list *node)
 {
 	node->next = *begin_list;
 	*begin_list = node;
 }
 
-static void	__ftst_list_remove_if(__ftst_list **begin_list, void* ptr_ref)
+static void     __ftst_list_remove_if(__ftst_list **begin_list, void* ptr_ref)
 {
-	t_list	*buff;
-	t_list	*prev;
-	t_list	*next;
+	__ftst_list*    buff;
+	__ftst_list*    prev;
+	__ftst_list*    next;
 
 	buff = *begin_list;
 	prev = NULL;
@@ -357,18 +351,57 @@ static void	__ftst_list_clear(__ftst_list *begin_list)
 	{
 		buff = begin_list;
 		begin_list = buff->next;
-		free(buff);
+		libc_free(buff);
 	}
 }
+#  endif
 
+/***************************************************/
+/*                 ALLOC FUNCTIONS                 */
 
-size_t        ftst_malloc_size(void *ptr)
+#  ifdef FTST_MAIN_FILE
+size_t        __ftst_malloc_size(void* ptr)
 {
-    __ftst_list *find_ptr = __ftst_list_find(__ftst_memory_aggregator, ptr);
+    __ftst_list* find_ptr = __ftst_list_find(__ftst_memory_aggregator, ptr);
     __FTST_RUNTIME_ASSERT(find_ptr, "can't find memory in aggregator");
     return (find_ptr->size);
 }
+#  else
+size_t        __ftst_malloc_size(void* ptr);
+#  endif
 
+#  define FTST_MALLOC_SIZE(ptr)     __ftst_malloc_size(ptr)
+
+/*********************************************************/
+/*                      LEAKS CHECK                      */
+
+#  ifdef FTST_MAIN_FILE
+bool        __ftst_leaks(void)
+{
+    return (!!__ftst_memory_aggregator);
+}
+#  else
+bool        __ftst_leaks(void);
+#  endif
+
+#  define FTST_LEAKS()          __ftst_leaks()
+
+#  ifdef FTST_MAIN_FILE
+void        __ftst_leak_stat_reset(void)
+{
+    __ftst_list_clear(__ftst_memory_aggregator);
+    __ftst_memory_aggregator = NULL;
+}
+#  else
+void        __ftst_leak_stat_reset(void);
+#  endif
+
+#  define   FTST_LEAK_RESET()   __ftst_leak_stat_reset();
+
+/*******************************************************/
+/*                    MALLOC REPLACE                   */
+
+#  ifdef FTST_MAIN_FILE
 static void*   __ftst_malloc_error()
 {
     __ftst_alloc_test.error_happend = true;
@@ -378,6 +411,8 @@ static void*   __ftst_malloc_error()
 
 void*   malloc(size_t size)
 {
+    void*   ptr;
+
     __ftst_alloc_test.error_happend = false;
 
     if (__ftst_alloc_test.single_limit.is_active &&
@@ -395,21 +430,74 @@ void*   malloc(size_t size)
             return (__ftst_malloc_error());
         __ftst_alloc_test.fail_counter.d--;
     }
-    return (libc_malloc(size));
+
+    ptr = libc_malloc(size);
+    __ftst_list_push_front(&__ftst_memory_aggregator, __ftst_create_list(ptr, size));
+
+    return (ptr);
 }
 
 void    free(void *p)
 {
+    __ftst_list_remove_if(&__ftst_memory_aggregator, p);
     libc_free(p);
 }
-
 #  endif
+
+#  ifdef FTST_MAIN_FILE
+static void __ftst_init_alloc(void)
+{
+    libc_malloc = dlsym(RTLD_NEXT, "malloc");
+    libc_free   = dlsym(RTLD_NEXT, "free");
+}
+
+static void __ftst_exit_alloc(void) { }
+#  endif 
+
+# else
+
+#  define  FTST_ALLOC_COUNTER_SET(...)
+#  define  FTST_ALLOC_COUNTER_CLEAN(...)
+
+#  define  FTST_ALLOC_LIMIT_SET(...)
+#  define  FTST_ALLOC_LIMIT_CLEAN(...)
+
+#  define  FTST_ALLOC_SINGLE_LIMIT_SET(...)
+#  define  FTST_ALLOC_SINGLE_LIMIT_CLEAN(...)
+
+#  define  FTST_ALLOC_IF_ERROR(...)
+#  define  FTST_ALLOC_IF_ERROR_ELSE(...)
+
+#  define  FTST_LEAK_RESET(...)
+
+#  define  FTST_MALLOC_SIZE(...)    0
+#  define  FTST_LEAKS(...)          0
+
+# endif
+
+# if       FTST_NAMESPACE
+#  define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
+#  define  ALLOC_COUNTER_CLEAN         FTST_ALLOC_COUNTER_CLEAN
+
+#  define  ALLOC_LIMIT_SET             FTST_ALLOC_LIMIT_SET
+#  define  ALLOC_LIMIT_CLEAN           FTST_ALLOC_LIMIT_CLEAN
+
+#  define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
+#  define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
+
+#  define  ALLOC_CLEAN                 FTST_ALLOC_CLEAN                                    
+
+#  define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR
+#  define  ALLOC_IF_ERROR_ELSE         FTST_ALLOC_IF_ERROR_ELSE
+
+#  define  LEAK_RESET                  FTST_LEAK_RESET                   
+
+#  define  MALLOC_SIZE                 FTST_MALLOC_SIZE
+#  define  LEAKS                       FTST_LEAKS
 # endif
 
 /*******************************************************
 *******************************************************/
-
-/*************************************************/
 
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
@@ -422,9 +510,9 @@ void    free(void *p)
 **
 **  example:
 **  __FTST_MULTI_MACRO(MY_MACRO, __VA_ARGS__)
-**  MY_MACRO_1(a)
-**  MY_MACRO_2(a, b)
-**  MY_MACRO_3(a, b, c)
+**  MY_MACRO_3(a, b, c) REAL_FUNCTION(a, b, c)
+**  MY_MACRO_2(a, b)    MY_MACRO(a, b, default_c)
+**  MY_MACRO_1(a)       MY_MACRO(a, default_b, default_c)
 **
 */
 
@@ -522,7 +610,9 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 /****************************************************/
 /*					ERROR MESSAGE					*/
 
-static void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
+
+# ifdef FTST_MAIN_FILE
+void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
                             char const *actual, const char* actual_value, char const* expect, char const* expect_value)
 {
     __FTST_WRITE_ERROR_TO_STREAM(
@@ -539,6 +629,10 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
     __FTST_WRITE_ERROR_TO_STREAM("\n");
     __FTST_FFLUSH_STREAM();
 }
+# else
+extern void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value);
+# endif
 
 # define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str) \
         __ftst_test_error(__LINE__, __ftst_current->test_name, \
@@ -623,6 +717,7 @@ static void    __ftst_test_error(size_t const line, char const* test_case_name, 
 **			Initialization and execution tests				**
 *************************************************************/
 
+# ifdef FTST_MAIN_FILE
 static void    __ftst_init_table(char const* table_name)
 {
     if (table_name != NULL)
@@ -663,6 +758,9 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
     if (__ftst_g.table)
         fclose(__ftst_g.table);
 
+# if FTST_ALLOC_TEST
+    __ftst_exit_alloc();
+# endif
     __ftst_g.table   = NULL;
     __ftst_g.stream  = NULL;
     if (__ftst_results.passed == __ftst_results.launched)
@@ -671,9 +769,12 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
 }
 
 # define FTST_EXIT()	__ftst_exit(__ftst_main_test)
+# endif
 
 /********************************************************/
 /*					PRINT RESULTS						*/
+
+# ifdef FTST_MAIN_FILE
 
 # define __FTST_PRETTY_TEST_STATUS(status, test_case_name) "%-20s : " __FTST_PRETTY_TEST_CASE_NAME("%s"), \
                                                           status,                          test_case_name
@@ -713,21 +814,16 @@ static void    __ftst_pretty_print_result(
     
 }
 
+# endif
+
 /********************************************************/
 /*					TEST EXECUTION						*/
-
-# define FTST_RUNTEST(test_name)                                                                \
-    {                                                                                           \
-        __ftst_test_results __results =                                                         \
-                __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name));\
-        __ftst_current->passed      += __results.passed;                                        \
-        __ftst_current->launched    += __results.launched;                                      \
-    }
 
 static clock_t ftst_start_timer() { return clock(); }
 static clock_t ftst_time(clock_t start) { return clock() - start; }
 
-static __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
+# ifdef FTST_MAIN_FILE
+__ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
 {
     clock_t             time;
     __ftst_test_results test_results = (__ftst_test_results){ 0, 0, test_case_name };
@@ -749,5 +845,16 @@ static __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char co
         test_case_name, test_results.passed, test_results.launched, time);
     return (test_results);
 }
+# else
+__ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name);
+# endif
+
+# define FTST_RUNTEST(test_name)                                                                \
+    {                                                                                           \
+        __ftst_test_results __results =                                                         \
+                __ftst_run_test(&__FTST_TEST_CASE(test_name), __FTST_TEST_CASE_NAME(test_name));\
+        __ftst_current->passed      += __results.passed;                                        \
+        __ftst_current->launched    += __results.launched;                                      \
+    }
 
 #endif
