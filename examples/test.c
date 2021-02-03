@@ -1,3 +1,4 @@
+#define FTST_MAIN_FILE
 #include "ftst.h"
 
 TEST(equal_test)
