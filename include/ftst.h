@@ -838,8 +838,8 @@ static void    __ftst_pretty_print_result(
 /********************************************************/
 /*					TEST EXECUTION						*/
 
-static clock_t ftst_start_timer() { return clock(); }
-static clock_t ftst_time(clock_t start) { return clock() - start; }
+static inline clock_t ftst_start_timer() { return clock(); }
+static inline clock_t ftst_time(clock_t start) { return clock() - start; }
 
 # ifdef FTST_MAIN_FILE
 __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
