@@ -137,6 +137,8 @@ __FTST_EXTERN __ftst_global __ftst_g;
 **                   PRETTY_PRINT					**
 *****************************************************/
 
+/*          COLORS          */
+
 # if FTST_COLOR
 #  define __FTST_ANSI_COLOR_RED     "\x1b[31m"
 #  define __FTST_ANSI_COLOR_GREEN   "\x1b[32m"
@@ -156,11 +158,16 @@ __FTST_EXTERN __ftst_global __ftst_g;
 #  define __FTST_ANSI_COLOR_RESET
 # endif
 
+/*          PRETTY STRING DECORATORS          */
+
 # define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_SUCCESS(str)         __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
 # define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
+
+/***********************************/
+/*          STREAM OUTPUT          */
 
 # ifdef FTST_MAIN_FILE
 void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
@@ -246,6 +253,11 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 #  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
 #  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN()         __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
+/*
+**
+**  FTST_ALLOC_CLEAN call clean for all alloc limits
+**
+*/
 #  define   FTST_ALLOC_CLEAN()              \
     {                                       \
         FTST_ALLOC_SINGLE_LIMIT_CLEAN();    \
@@ -253,15 +265,22 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
         FTST_ALLOC_COUNTER_CLEAN();         \
     }
 
+#  define   FTST_IS_MALLOC_ERROR    __ftst_alloc_test.error_happend
+
 #  define   FTST_ALLOC_IF_ERROR(true_branch)                \
-    if (__ftst_alloc_test.error_happend)                    \
     {                                                       \
-        true_branch;                                        \
+        if (FTST_IS_MALLOC_ERROR)                           \
+        {                                                   \
+            true_branch;                                    \
+        }                                                   \
     }
 
 #  define   FTST_ALLOC_IF_ERROR_ELSE(true_branch, false_branch) \
     {                                                       \
-        FTST_ALLOC_IF_ERROR(true_branch)                    \
+        if (FTST_IS_MALLOC_ERROR)                           \
+        {                                                   \
+            true_branch                                     \
+        }                                                   \
         else                                                \
         {                                                   \
             false_branch;                                   \
@@ -439,11 +458,16 @@ void*   malloc(size_t size)
 
 void    free(void *p)
 {
+    if (__ftst_alloc_test.limit.is_active)
+        __ftst_alloc_test.limit.d += __ftst_malloc_size(p);
+
     __ftst_list_remove_if(&__ftst_memory_aggregator, p);
     libc_free(p);
 }
 #  endif
 
+/************************************************/
+/*                  ALLOC INIT                  */
 #  ifdef FTST_MAIN_FILE
 static void __ftst_init_alloc(void)
 {
