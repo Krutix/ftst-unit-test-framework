@@ -12,18 +12,37 @@
 **              Default settings				**
 *************************************************/
 
+/*
+** FTST_COLOR define colors for console output
+*/
 # ifndef        FTST_COLOR
 #  define       FTST_COLOR          true
 # endif
+/*
+** FTST_NAMESPACE
+** if define as 'true' or '1' its define shortest names for common macro functions
+*/
 # ifndef        FTST_NAMESPACE 
 #  define       FTST_NAMESPACE      true
 # endif
+/*
+** FTST_SILENT
+** if define as 'true' or '1' not an error message dont be printed in console
+*/
 # ifndef        FTST_SILENT
 #  define       FTST_SILENT         false
 # endif
+/*
+** FTST_ERROR_MESSAGE
+** if define as 'false' or '0' error message dont be printed in console
+*/
 # ifndef        FTST_ERROR_MESSAGE
 #  define       FTST_ERROR_MESSAGE  true
 # endif
+/*
+** FTST_ALLOC_TEST
+** if define as 'false' or '0' all allocation tests will be removed
+*/
 # ifndef        FTST_ALLOC_TEST
 #  define       FTST_ALLOC_TEST     false
 # endif
@@ -386,7 +405,7 @@ size_t        __ftst_malloc_size(void* ptr)
     return (find_ptr->size);
 }
 #  else
-size_t        __ftst_malloc_size(void* ptr);
+extern size_t        __ftst_malloc_size(void* ptr);
 #  endif
 
 #  define FTST_MALLOC_SIZE(ptr)     __ftst_malloc_size(ptr)
@@ -400,7 +419,7 @@ bool        __ftst_leaks(void)
     return (!!__ftst_memory_aggregator);
 }
 #  else
-bool        __ftst_leaks(void);
+extern bool        __ftst_leaks(void);
 #  endif
 
 #  define FTST_LEAKS()          __ftst_leaks()
@@ -412,7 +431,7 @@ void        __ftst_leak_stat_reset(void)
     __ftst_memory_aggregator = NULL;
 }
 #  else
-void        __ftst_leak_stat_reset(void);
+extern void        __ftst_leak_stat_reset(void);
 #  endif
 
 #  define   FTST_LEAK_RESET()   __ftst_leak_stat_reset();
@@ -843,8 +862,8 @@ static void    __ftst_pretty_print_result(
 /********************************************************/
 /*					TEST EXECUTION						*/
 
-static clock_t ftst_start_timer() { return clock(); }
-static clock_t ftst_time(clock_t start) { return clock() - start; }
+static inline clock_t ftst_start_timer() { return clock(); }
+static inline clock_t ftst_time(clock_t start) { return clock() - start; }
 
 # ifdef FTST_MAIN_FILE
 __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name)
@@ -870,7 +889,7 @@ __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* te
     return (test_results);
 }
 # else
-__ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name);
+extern __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* test_case_name);
 # endif
 
 # define FTST_RUNTEST(test_name)                                                                \

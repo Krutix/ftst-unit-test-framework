@@ -3,6 +3,7 @@
 #include <fcntl.h>
 
 #define FTST_ALLOC_TEST false
+#define FTST_MAIN_FILE
 #include "ftst.h"
 
 #define TEST_PRINTF(F, ...) printf(F, __VA_ARGS__), fflush(stdout)

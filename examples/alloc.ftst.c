@@ -1,7 +1,7 @@
-
 #define FTST_ALLOC_TEST true
 #define FTST_MAIN_FILE
 #include "ftst.h"
+
 #include <stdlib.h>
 
 int foo()
@@ -31,8 +31,10 @@ TEST(malloc_test)
     }
     ALLOC_CLEAN();
 
-    void *ptr = malloc(16);
+    void* ptr = malloc(16);
     EQ(MALLOC_SIZE(ptr), 16, zu);
+    IS_TRUE(LEAKS());
+
     free(ptr);
 
     IS_FALSE(LEAKS());
