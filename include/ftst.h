@@ -43,8 +43,8 @@
 ** FTST_ALLOC_TEST
 ** if define as 'false' or '0' all allocation tests will be removed
 */
-# ifndef        FTST_ALLOC_TEST
-#  define       FTST_ALLOC_TEST     false
+# ifndef        FTST_MALLOC_TEST
+#  define       FTST_MALLOC_TEST     false
 # endif
 # ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
@@ -222,20 +222,22 @@ extern void    __ftst_write_to_stream(FILE* stream, char const* format, ...);
 **                  ALLOCATION TEST					**
 *****************************************************/
 
-# if        FTST_ALLOC_TEST
+# if        FTST_MALLOC_TEST
 
-#  if   defined(__linux__)
-#   include <malloc.h>
-#   define _GNU_SOURCE
-#   define __USE_GNU
-#  elif defined(__APPLE__)
-#   include <malloc/malloc.h>
-#  endif
-#  include <dlfcn.h>
-#  include <errno.h>
+#  ifdef       FTST_MAIN_FILE
+#   if   defined(__linux__)
+#    include <malloc.h>
+#    define _GNU_SOURCE
+#    define __USE_GNU
+#   elif defined(__APPLE__)
+#    include <malloc/malloc.h>
+#   endif
+#   include <dlfcn.h>
+#   include <errno.h>
 /*
 ** On linux use -ldl flag to link dlfcn lib
 */
+#  endif
 
 
 typedef struct {
@@ -252,66 +254,43 @@ typedef struct {
 
 __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 
-#  define   __FTST_ALLOC_SET(value, test)       \
+#  define   __FTST_MALLOC_SET(value, test)      \
     {                                           \
         test.is_active = true;                  \
         test.d = value;                         \
     }
 
-#  define   __FTST_ALLOC_CLEAN(test)            \
+#  define   __FTST_MALLOC_CLEAN(test)           \
     {                                           \
         test.is_active = false;                 \
     }
 
-#  define   FTST_ALLOC_COUNTER_SET(value)           __FTST_ALLOC_SET(value, __ftst_alloc_test.fail_counter)
-#  define   FTST_ALLOC_COUNTER_CLEAN()              __FTST_ALLOC_CLEAN(__ftst_alloc_test.fail_counter)
+#  define   FTST_MALLOC_COUNTER_SET(value)           __FTST_MALLOC_SET(value, __ftst_alloc_test.fail_counter)
+#  define   FTST_MALLOC_COUNTER_CLEAN()              __FTST_MALLOC_CLEAN(__ftst_alloc_test.fail_counter)
 
-#  define   FTST_ALLOC_LIMIT_SET(value)             __FTST_ALLOC_SET(value, __ftst_alloc_test.limit)
-#  define   FTST_ALLOC_LIMIT_CLEAN()                __FTST_ALLOC_CLEAN(__ftst_alloc_test.limit)
+#  define   FTST_MALLOC_LIMIT_SET(value)             __FTST_MALLOC_SET(value, __ftst_alloc_test.limit)
+#  define   FTST_MALLOC_LIMIT_CLEAN()                __FTST_MALLOC_CLEAN(__ftst_alloc_test.limit)
 
-#  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
-#  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN()         __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
+#  define   FTST_MALLOC_SINGLE_LIMIT_SET(value)      __FTST_MALLOC_SET(value, __ftst_alloc_test.single_limit)
+#  define   FTST_MALLOC_SINGLE_LIMIT_CLEAN()         __FTST_MALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
 /*
 **
 **  FTST_ALLOC_CLEAN call clean for all alloc limits
 **
 */
-#  define   FTST_ALLOC_CLEAN()              \
+#  define   FTST_MALLOC_CLEAN()             \
     {                                       \
-        FTST_ALLOC_SINGLE_LIMIT_CLEAN();    \
-        FTST_ALLOC_LIMIT_CLEAN();           \
-        FTST_ALLOC_COUNTER_CLEAN();         \
+        FTST_MALLOC_SINGLE_LIMIT_CLEAN();   \
+        FTST_MALLOC_LIMIT_CLEAN();          \
+        FTST_MALLOC_COUNTER_CLEAN();        \
     }
 
 #  define   FTST_IS_MALLOC_ERROR    __ftst_alloc_test.error_happend
 
-#  define   FTST_ALLOC_IF_ERROR(true_branch)                \
-    {                                                       \
-        if (FTST_IS_MALLOC_ERROR)                           \
-        {                                                   \
-            true_branch;                                    \
-        }                                                   \
-    }
-
-#  define   FTST_ALLOC_IF_ERROR_ELSE(true_branch, false_branch) \
-    {                                                       \
-        if (FTST_IS_MALLOC_ERROR)                           \
-        {                                                   \
-            true_branch                                     \
-        }                                                   \
-        else                                                \
-        {                                                   \
-            false_branch;                                   \
-        }                                                   \
-    }
-
-
 #  ifdef FTST_MAIN_FILE
-
 static void*(*libc_malloc)(size_t);
 static void(*libc_free)(void*);
-
 #  endif
 
 /*              LIST MANAGMENT FUNCTIONS          */
@@ -499,19 +478,18 @@ static void __ftst_exit_alloc(void) { }
 
 # else
 
-#  define  FTST_ALLOC_COUNTER_SET(...)
-#  define  FTST_ALLOC_COUNTER_CLEAN(...)
+#  define  FTST_MALLOC_COUNTER_SET(...)
+#  define  FTST_MALLOC_COUNTER_CLEAN(...)
 
-#  define  FTST_ALLOC_LIMIT_SET(...)
-#  define  FTST_ALLOC_LIMIT_CLEAN(...)
+#  define  FTST_MALLOC_LIMIT_SET(...)
+#  define  FTST_MALLOC_LIMIT_CLEAN(...)
 
-#  define  FTST_ALLOC_SINGLE_LIMIT_SET(...)
-#  define  FTST_ALLOC_SINGLE_LIMIT_CLEAN(...)
-
-#  define  FTST_ALLOC_IF_ERROR(...)
-#  define  FTST_ALLOC_IF_ERROR_ELSE(...)
+#  define  FTST_MALLOC_SINGLE_LIMIT_SET(...)
+#  define  FTST_MALLOC_SINGLE_LIMIT_CLEAN(...)
 
 #  define  FTST_LEAK_RESET(...)
+
+#  define  FTST_IS_MALLOC_ERROR     0
 
 #  define  FTST_MALLOC_SIZE(...)    0
 #  define  FTST_LEAKS(...)          0
@@ -519,19 +497,16 @@ static void __ftst_exit_alloc(void) { }
 # endif
 
 # if       FTST_NAMESPACE
-#  define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
-#  define  ALLOC_COUNTER_CLEAN         FTST_ALLOC_COUNTER_CLEAN
+#  define  MALLOC_COUNTER_SET           FTST_MALLOC_COUNTER_SET
+#  define  MALLOC_COUNTER_CLEAN         FTST_MALLOC_COUNTER_CLEAN
 
-#  define  ALLOC_LIMIT_SET             FTST_ALLOC_LIMIT_SET
-#  define  ALLOC_LIMIT_CLEAN           FTST_ALLOC_LIMIT_CLEAN
+#  define  MALLOC_LIMIT_SET             FTST_MALLOC_LIMIT_SET
+#  define  MALLOC_LIMIT_CLEAN           FTST_MALLOC_LIMIT_CLEAN
 
-#  define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
-#  define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
+#  define  MALLOC_SINGLE_LIMIT_SET      FTST_MALLOC_SINGLE_LIMIT_SET
+#  define  MALLOC_SINGLE_LIMIT_CLEAN    FTST_MALLOC_SINGLE_LIMIT_CLEAN
 
-#  define  ALLOC_CLEAN                 FTST_ALLOC_CLEAN                                    
-
-#  define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR
-#  define  ALLOC_IF_ERROR_ELSE         FTST_ALLOC_IF_ERROR_ELSE
+#  define  MALLOC_CLEAN                 FTST_MALLOC_CLEAN                                    
 
 #  define  LEAK_RESET                  FTST_LEAK_RESET                   
 
@@ -779,7 +754,7 @@ static void    __ftst_init_stream(FILE* stream_output)
 
 static void    __ftst_init(FILE* stream_output, char const* table_name)
 {
-# if FTST_ALLOC_TEST
+# if FTST_MALLOC_TEST
     __ftst_init_alloc();
 # endif
     __ftst_init_stream(stream_output);

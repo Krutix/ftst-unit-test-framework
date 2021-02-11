@@ -10,7 +10,7 @@ FTST это маленький header-only unit test framework для C, раз�
 - [x] Unreadeble source on macro magic
 - [ ] Compare with specific accuracy
 - [ ] Launch block of tests
-- [ ] Error custom comments
+- [ ] Castom error desctiption
 
 **More about FTST functionality on [wiki](https://github.com/Krutix/ft_speed_test/wiki)**
 
@@ -27,7 +27,7 @@ TEST(my_test)
 
 int main()
 {
-    FTST_INIT(stdout, NULL);
+    FTST_INIT();
 
     RUN_TEST(my_test);
 
