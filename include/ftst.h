@@ -635,16 +635,15 @@ void    __ftst_test_error(size_t const line, char const* test_case_name, char co
 {
     __FTST_WRITE_ERROR_TO_STREAM(
         "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-        "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
-            test_name, test_case_name, line, actual_value, actual);
+        "\n%4zu:\t" "%6s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+            test_name, test_case_name, line, "actual", actual_value, actual);
     if (expect != NULL)
     {
         __FTST_WRITE_ERROR_TO_STREAM(
-            ",   expected: " __FTST_PRETTY_INFO("%s")"[%s]",
+            "      expected: " __FTST_PRETTY_INFO("%s")"[%s]\n",
             expect_value, expect);
     }
-    
-    __FTST_WRITE_ERROR_TO_STREAM("\n");
+
     __FTST_FFLUSH_STREAM();
 }
 # else
