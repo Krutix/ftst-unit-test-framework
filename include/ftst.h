@@ -595,9 +595,6 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_TYPE_gf                 float
 # define __FTST_TYPE_g                  double
 # define __FTST_TYPE_Lg                 long double
-# define __FTST_TYPE_ff                 float
-# define __FTST_TYPE_f                  double
-# define __FTST_TYPE_Lf                 long double
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
 # define __FTST_TYPE_s                  char*
