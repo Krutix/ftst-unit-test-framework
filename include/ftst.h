@@ -628,7 +628,8 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 
 # ifdef FTST_MAIN_FILE
 void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value)
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
+                            char const *description)
 {
     __FTST_WRITE_ERROR_TO_STREAM(
         "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
@@ -640,6 +641,12 @@ void    __ftst_test_error(size_t const line, char const* test_case_name, char co
             "      expected: " __FTST_PRETTY_INFO("%s")"[%s]\n",
             expect_value, expect);
     }
+    if (description != NULL)
+    {
+        __FTST_WRITE_ERROR_TO_STREAM(
+            "   description: " __FTST_PRETTY_PROCESSED("%s\n"),
+            description);
+    }
 
     __FTST_FFLUSH_STREAM();
 }
@@ -648,9 +655,9 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
                             char const *actual, const char* actual_value, char const* expect, char const* expect_value);
 # endif
 
-# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str) \
+# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str, description) \
         __ftst_test_error(__LINE__, __ftst_current->test_name, \
-                    _test_name, actual, actual_str, expect, expect_str)
+                    _test_name, actual, actual_str, expect, expect_str, description)
 
 /****************************************************/
 /*					TEST TEMPLATES					*/
@@ -658,49 +665,52 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
-# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct)                                        \
+# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct, description)                           \
         {                                                                                                   \
             char const* actual_v = actual;                                                                  \
             char const* expect_v = expect;                                                                  \
             __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                      \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v);            \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v, description);\
                             error_funct)                                                                    \
         }
 
-# define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, type)                                  \
+# define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, type, description)                     \
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_GET_TYPE(type) expect_v = expect;                                                        \
             __FTST_SIMPLE_TEST((actual_v) operation (expect_v),                                             \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
                             __FTST_SNPRINTF(expect_str, FTST_VAR_STR_BUFFER, "%"#type, expect_v);           \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str);        \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str, description);\
                             error_funct)                                                                    \
         }
 
-# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, type)                                    \
+# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, type, description)                       \
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_SIMPLE_TEST(operation(actual_v),                                                         \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
-                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);                       \
+                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL, description);          \
                             error_funct)                                                                    \
         }
 
-# define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
+# define __FTST_STR_CMP_5(operator, actual, expect, error_funct, description)         __FTST_STR_CMP_REAL(actual, operator, expect, error_funct, description)
+# define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_5(operator, actual, expect, error_funct, NULL)
 # define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
 # define __FTST_STR_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_1)
 # define __FTST_STR_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_0)
 # define __FTST_STR_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
-# define __FTST_TWO_CMP_5(operator, actual, expect, type, error_funct)                __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type)
+# define __FTST_TWO_CMP_6(operator, actual, expect, type, error_funct, description)   __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type, description)
+# define __FTST_TWO_CMP_5(operator, actual, expect, type, error_funct)                __FTST_TWO_CMP_6(operator, actual, expect, type, error_funct, NULL)
 # define __FTST_TWO_CMP_4(operator, actual, expect, type)                             __FTST_TWO_CMP_5(operator, actual, expect, type, FTST_EXPECT)
 # define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_TWO_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_1)
 # define __FTST_TWO_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_0)
 # define __FTST_TWO_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
-# define __FTST_ONE_CMP_5(operator, name, actual, type, error_funct)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
+# define __FTST_ONE_CMP_6(operator, name, actual, type, error_funct, description)     __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type, description)
+# define __FTST_ONE_CMP_5(operator, name, actual, type, error_funct)                  __FTST_ONE_CMP_6(operator, name, actual, type, error_funct, NULL)
 # define __FTST_ONE_CMP_4(operator, name, actual, type)                               __FTST_ONE_CMP_5(operator, name, actual, type, FTST_EXPECT)
 # define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_ONE_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, bool_cmp_take_1_or_more_arguments_not_0)

@@ -33,7 +33,7 @@ TEST(error_test)
     EQ(-1llu, -1llu, llu);
     LESS(-1llu, 1llu, llu);
     LESSEQ(-1llu, 1llu, llu);
-    EQ(-1llu, 1llu, llu, ASSERT);
+    EQ(-1llu, 1llu, llu, ASSERT, "some error happend");
     EQ(-1, 1);
 }
 
