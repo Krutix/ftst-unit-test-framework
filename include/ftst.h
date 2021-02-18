@@ -652,7 +652,8 @@ void    __ftst_test_error(size_t const line, char const* test_case_name, char co
 }
 # else
 extern void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value);
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
+                            char const *description);
 # endif
 
 # define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str, description) \
@@ -860,8 +861,6 @@ __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* te
     test_case(&test_results);
     time = ftst_time(time);
 
-	if (test_results.passed == test_results.launched)
-		__FTST_WRITE_TO_STREAM(__FTST_ANSI_CLEAR_LINE);
     __ftst_pretty_print_result(test_case_name, test_results, time);
 
 
