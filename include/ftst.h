@@ -366,13 +366,13 @@ static void     __ftst_list_remove_if(__ftst_list **begin_list, void* ptr_ref)
 	while (buff)
 	{
 		next = buff->next;
-		if (buff->ptr, ptr_ref)
+		if (buff->ptr == ptr_ref)
 		{
 			if (prev)
 				prev->next = buff->next;
 			else
 				*begin_list = buff->next;
-			free(buff);
+			libc_free(buff);
             return ;
 		}
 		else
