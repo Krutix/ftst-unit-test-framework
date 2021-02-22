@@ -189,33 +189,46 @@ __FTST_EXTERN __ftst_global __ftst_g;
 /*          STREAM OUTPUT          */
 
 # ifdef FTST_MAIN_FILE
-void    __ftst_write_to_stream(FILE* stream, char const* format, ...)
+void    __ftst_vfprintf(FILE* stream, char const* format, va_list argptr)
+{
+    if (stream)
+        vfprintf(stream, format, argptr);
+}
+# else
+extern void    __ftst_vfprintf(FILE* stream, char const* format, ...);
+# endif
+
+# ifdef FTST_MAIN_FILE
+void    __ftst_fprintf(FILE* stream, char const* format, ...)
 {
     va_list arg_list;
 
     va_start(arg_list, format);
-    if (stream)
-        vfprintf(stream, format, arg_list);
+    __ftst_vfprintf(stream, format, arg_list);
     va_end(arg_list);
 }
 # else
-extern void    __ftst_write_to_stream(FILE* stream, char const* format, ...);
+extern void    __ftst_fprintf(FILE* stream, char const* format, ...);
 # endif
 
 # if !(FTST_SILENT)
-#  define __FTST_WRITE_TO_STREAM(...)       __ftst_write_to_stream(__ftst_g.stream, __VA_ARGS__)
+#  define __FTST_STREAM_PRINTF(...)         __ftst_fprintf(__ftst_g.stream, __VA_ARGS__)
+#  define __FTST_STREAM_VPRINTF(f, arg)     __ftst_vfprintf(__ftst_g.stream, f, arg)
 #  define __FTST_FFLUSH_STREAM()            fflush(__ftst_g.stream)
 # else
-#  define __FTST_WRITE_TO_STREAM(...)
+#  define __FTST_STREAM_PRINTF(...)
+#  define __FTST_STREAM_VPRINTF(...)
 #  define __FTST_FFLUSH_STREAM()
 # endif
 
-# define __FTST_WRITE_TO_TABLE(...)         __ftst_write_to_stream(__ftst_g.table, __VA_ARGS__)
+# define __FTST_TABLE_PRINTF(...)           __ftst_fprintf(__ftst_g.table, __VA_ARGS__)
 
 # if (FTST_ERROR_MESSAGE)
-#  define __FTST_WRITE_ERROR_TO_STREAM(...)  __ftst_write_to_stream(__ftst_g.stream, __VA_ARGS__)
+#  define __FTST_ERROR_PRINTF(...)          __ftst_fprintf(__ftst_g.stream, __VA_ARGS__)
+#  define __FTST_ERROR_VPRINTF(f, arg)      __ftst_vfprintf(__ftst_g.stream, f, arg)
 # else
-#  define __FTST_WRITE_ERROR_TO_STREAM(...)
+#  define __FTST_ERROR_PRINTF(...)
+#  define __FTST_ERROR_VPRINTF(...)
 # endif
 
 /*****************************************************
@@ -630,38 +643,51 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 
 
 # ifdef FTST_MAIN_FILE
-void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
-                            char const *description)
+void    __ftst_test_write_error(size_t const line, char const* test_case_name, char const* test_name,
+                            char const *actual_str, const char* actual)
 {
-    __FTST_WRITE_ERROR_TO_STREAM(
+    __FTST_ERROR_PRINTF(
         "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-        "\n%4zu:\t" "%6s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
-            test_name, test_case_name, line, "actual", actual_value, actual);
-    if (expect != NULL)
-    {
-        __FTST_WRITE_ERROR_TO_STREAM(
-            "      expected: " __FTST_PRETTY_INFO("%s")"[%s]\n",
-            expect_value, expect);
-    }
-    if (description != NULL)
-    {
-        __FTST_WRITE_ERROR_TO_STREAM(
-            "   description: " __FTST_PRETTY_PROCESSED("%s\n"),
-            description);
-    }
+        "\n%4zu:  " "%6s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+            test_name, test_case_name, line, "actual", actual, actual_str);
+}
 
-    __FTST_FFLUSH_STREAM();
+void    __ftst_test_write_addition(char const* value_name,
+                            char const *value_str, const char* value)
+{
+    __FTST_ERROR_PRINTF(
+        "%13s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+            value_name, value, value_str);
+}
+
+void    __ftst_test_write_description(char const* description_name,
+                            char const *format, ...)
+{
+    va_list argptr;
+    va_start(argptr, format);
+
+    __FTST_ERROR_PRINTF(
+        __FTST_PRETTY_PROCESSED("%13s: "),
+            description_name);
+    __FTST_ERROR_VPRINTF(
+        format,
+            argptr);
+    __FTST_STREAM_PRINTF("\n");
+
+    va_end(argptr);
 }
 # else
-extern void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
-                            char const *description);
+extern void    __ftst_test_write_error(size_t const line, char const* test_case_name,
+                            char const* test_name, char const *actual_str, const char* actual);
+extern void    __ftst_test_write_addition(char const* value_name,
+                            char const *value_str, const char* value);
+extern void    __ftst_test_write_description(char const* description_name,
+                            char const *format, ...);
 # endif
 
-# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str, description) \
-        __ftst_test_error(__LINE__, __ftst_current->test_name, \
-                    _test_name, actual, actual_str, expect, expect_str, description)
+# define __FTST_TEST_WRITE_ERROR(_test_name, actual, actual_str) \
+        __ftst_test_write_error(__LINE__, __ftst_current->test_name, \
+                    _test_name, actual, actual_str)
 
 /****************************************************/
 /*					TEST TEMPLATES					*/
@@ -674,7 +700,9 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
             char const* actual_v = actual;                                                                  \
             char const* expect_v = expect;                                                                  \
             __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                      \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v, description);\
+                            __FTST_TEST_WRITE_ERROR(#operation, #actual, actual_v);                         \
+                            __ftst_test_write_addition("expected", #expect, expect_v);                      \
+                            if (description) __ftst_test_write_description("description", description);     \
                             error_funct)                                                                    \
         }
 
@@ -685,7 +713,9 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
             __FTST_SIMPLE_TEST((actual_v) operation (expect_v),                                             \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
                             __FTST_SNPRINTF(expect_str, FTST_VAR_STR_BUFFER, "%"#type, expect_v);           \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str, description);\
+                            __FTST_TEST_WRITE_ERROR(#operation, #actual, actual_str);                       \
+                            __ftst_test_write_addition("expected", #expect, expect_str);                    \
+                            if (description) __ftst_test_write_description("description", description);     \
                             error_funct)                                                                    \
         }
 
@@ -694,7 +724,8 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_SIMPLE_TEST(operation(actual_v),                                                         \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
-                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL, description);          \
+                            __FTST_TEST_WRITE_ERROR(#operation, #actual, actual_str);                       \
+                            if (description) __ftst_test_write_description("description", description);     \
                             error_funct)                                                                    \
         }
 
@@ -813,30 +844,30 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
 
 static void    __ftst_pretty_print_start(char const *test_case_name)
 {
-    __FTST_WRITE_TO_STREAM(__FTST_PRETTY_START_TEST(test_case_name));
-    __FTST_WRITE_TO_STREAM("\n");
+    __FTST_STREAM_PRINTF(__FTST_PRETTY_START_TEST(test_case_name));
+    __FTST_STREAM_PRINTF("\n");
 }
 
 static void    __ftst_pretty_print_result(
         char const* test_case_name, __ftst_test_results test, clock_t time)
 {
     if (test.passed == test.launched)
-        __FTST_WRITE_TO_STREAM(__FTST_PRETTY_SUCCESS_TEST(test_case_name));
+        __FTST_STREAM_PRINTF(__FTST_PRETTY_SUCCESS_TEST(test_case_name));
     else
-        __FTST_WRITE_TO_STREAM(__FTST_PRETTY_FAILED_TEST(test_case_name));
+        __FTST_STREAM_PRINTF(__FTST_PRETTY_FAILED_TEST(test_case_name));
 
-    __FTST_WRITE_TO_STREAM(" | ");
+    __FTST_STREAM_PRINTF(" | ");
 
     if (test.passed == test.launched)
-        __FTST_WRITE_TO_STREAM(
+        __FTST_STREAM_PRINTF(
             __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
                                 test.passed,                   test.launched);
     else
-        __FTST_WRITE_TO_STREAM(
+        __FTST_STREAM_PRINTF(
             __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
                                 test.passed,                   test.launched);
 
-    __FTST_WRITE_TO_STREAM(
+    __FTST_STREAM_PRINTF(
         " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
                             time / 1000.);
     
@@ -867,7 +898,7 @@ __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* te
     __ftst_pretty_print_result(test_case_name, test_results, time);
 
 
-    __FTST_WRITE_TO_TABLE("%s,%zu/%zu,%.3fms\n",
+    __FTST_TABLE_PRINTF("%s,%zu/%zu,%.3fms\n",
         test_case_name, test_results.passed, test_results.launched, time);
     return (test_results);
 }
