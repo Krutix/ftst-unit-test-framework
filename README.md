@@ -1,21 +1,24 @@
 # FTST unit test framework
-FTST is a small header-only unit test framework for C, developed for using in school21(42) projects
-
-FTST это маленький header-only unit test framework для C, разработанный для использования в проектах школы 21(42)
+FTST это маленький header-only unit test framework для C, разрабатываемый в качестве учебного проекта
 
 ## Tips
 - [x] Compatible with C89
 - [x] Compare with type specification
 - [x] Allocation test (malloc fail, malloc size, leaks)
+- [x] Compare with specific accuracy
+- [x] Castom error desctiption
+- [x] Launch block of tests
 - [x] Unreadeble source on macro magic
-- [ ] Compare with specific accuracy
-- [ ] Launch block of tests
-- [ ] Castom error desctiption
+- [ ] Output to standart stream handle
+- [ ] Advanced testrunner generator
+- [ ] Segfault and other fatal probles handle
 
-**More about FTST functionality on [wiki](https://github.com/Krutix/ft_speed_test/wiki)**
+**More about FTST functionality on [wiki](https://github.com/Krutix/ftst-unit-test-framework/wiki)**
 
 ## Getting started
-**More about getting started with FTST on [wiki](https://github.com/Krutix/ft_speed_test/wiki/Start-with-FTST)**
+Примеры кода с тестами можно посмотреть в папке *examples/*, а более подробное описание на [wiki](https://github.com/Krutix/ftst-unit-test-framework/wiki)
+
+**More about getting started with FTST on [wiki](https://github.com/Krutix/ftst-unit-test-framework/wiki/Start-with-FTST)**
 
 ```c
 #define FTST_MAIN_FILE
@@ -29,7 +32,7 @@ int main()
 {
     FTST_INIT();
 
-    RUN_TEST(my_test);
+    RUNTEST(my_test);
 
     return FTST_EXIT();
 }
