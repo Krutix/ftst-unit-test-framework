@@ -46,38 +46,18 @@
 # ifndef        FTST_MALLOC_TEST
 #  define       FTST_MALLOC_TEST     false
 # endif
+/*
+** FTST_VAR_STR_BUFFER
+** static buffer size for transform (snprintf) variables
+*/
 # ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
 # endif
 
-# if        FTST_NAMESPACE
-#  define EQ            FTST_EQ
-#  define NE            FTST_NE
-#  define LESS          FTST_LESS
-#  define LESSEQ        FTST_LESSEQ
-#  define MORE          FTST_MORE
-#  define MOREEQ        FTST_MOREEQ
-
-#  define EQ_A          FTST_EQ_A
-#  define NE_A          FTST_NE_A
-
-#  define STR_EQ        FTST_STR_EQ
-#  define STR_NE        FTST_STR_NE
-#  define STR_LESS      FTST_STR_LESS
-#  define STR_LESSEQ    FTST_STR_LESSEQ
-#  define STR_MORE      FTST_STR_MORE
-#  define STR_MOREEQ    FTST_STR_MOREEQ
-
-#  define IS_TRUE       FTST_IS_TRUE
-#  define IS_FALSE      FTST_IS_FALSE
-
-#  define EXPECT        FTST_EXPECT
-#  define ASSERT        FTST_ASSERT
-
-#  define TEST          FTST_TEST
-#  define RUNTEST       FTST_RUNTEST
-# endif
-
+/*
+** extern static variables if it is not main file
+** (in project can be only one FTST_MAIN_FILE)
+*/
 # ifndef     FTST_MAIN_FILE
 #  define   __FTST_EXTERN   extern
 # else
@@ -94,8 +74,8 @@ typedef struct {
 }               __ftst_test_results;
 
 typedef struct {
-    FILE*       		stream;
-    FILE*       		table;
+    FILE*       stream;
+    FILE*       table;
 }               __ftst_global;
 
 __FTST_EXTERN __ftst_global __ftst_g;
@@ -182,11 +162,11 @@ __FTST_EXTERN __ftst_global __ftst_g;
 
 /*          PRETTY STRING DECORATORS          */
 
-# define __FTST_PRETTY_PROCESSED(str)       __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_SUCCESS(str)         __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_FAILED(str)          __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_INFO(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
-# define __FTST_PRETTY_TEST_CASE_NAME(str)  __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_STR_YELLOW(str)          __FTST_ANSI_COLOR_YELLOW    str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_STR_GREEN(str)           __FTST_ANSI_COLOR_GREEN     str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_STR_RED(str)             __FTST_ANSI_COLOR_RED       str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_STR_BLUE(str)            __FTST_ANSI_COLOR_BLUE      str     __FTST_ANSI_COLOR_RESET
+# define __FTST_PRETTY_STR_CYAN(str)            __FTST_ANSI_COLOR_CYAN      str     __FTST_ANSI_COLOR_RESET
 
 /***********************************/
 /*          STREAM OUTPUT          */
@@ -650,8 +630,8 @@ void    __ftst_test_write_error(size_t const line, char const* test_case_name, c
                             char const *actual_str, const char* actual)
 {
     __FTST_ERROR_PRINTF(
-        "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-        "\n%4zu:  " "%6s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+        "["__FTST_PRETTY_STR_BLUE("%s")"] test from '%s' [" __FTST_PRETTY_STR_RED("failed")"]" \
+        "\n%4zu:  " "%6s: " __FTST_PRETTY_STR_BLUE("%s")"[%s]\n",
             test_name, test_case_name, line, "actual", actual, actual_str);
 }
 
@@ -659,7 +639,7 @@ void    __ftst_test_write_addition(char const* value_name,
                             char const *value_str, const char* value)
 {
     __FTST_ERROR_PRINTF(
-        "%13s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+        "%13s: " __FTST_PRETTY_STR_BLUE("%s")"[%s]\n",
             value_name, value, value_str);
 }
 
@@ -670,7 +650,7 @@ void    __ftst_test_write_description(char const* description_name,
     va_start(argptr, format);
 
     __FTST_ERROR_PRINTF(
-        __FTST_PRETTY_PROCESSED("%13s: "),
+        __FTST_PRETTY_STR_YELLOW("%13s:  "),
             description_name);
     __FTST_ERROR_VPRINTF(
         format,
@@ -765,9 +745,13 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_STR_CMP_8(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
 # define __FTST_STR_CMP_7(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
 # define __FTST_STR_CMP_6(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
+/*      ^ addition args for format string ^     */
 # define __FTST_STR_CMP_5(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
+/*      ^ go to real cmp ^              */
 # define __FTST_STR_CMP_4(...)           __FTST_STR_CMP_5(__VA_ARGS__, NULL)
+/*      ^ add default format string ^   */
 # define __FTST_STR_CMP_3(...)           __FTST_STR_CMP_4(__VA_ARGS__, FTST_EXPECT)
+/*      ^ add default error handler ^   */
 # define __FTST_STR_CMP_2(...)           __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_1)
 # define __FTST_STR_CMP_1(...)           __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_0)
 # define __FTST_STR_CMP_0()              __FTST_STATIC_ASSERT(0,)
@@ -782,10 +766,15 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_TWO_CMP_9(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
 # define __FTST_TWO_CMP_8(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
 # define __FTST_TWO_CMP_7(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
+/*      ^ addition args for format string ^       */
 # define __FTST_TWO_CMP_6(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
+/*      ^ go to real cmp ^              */
 # define __FTST_TWO_CMP_5(...)           __FTST_TWO_CMP_6(__VA_ARGS__, NULL)
+/*      ^ add default format string ^   */
 # define __FTST_TWO_CMP_4(...)           __FTST_TWO_CMP_5(__VA_ARGS__, FTST_EXPECT)
+/*      ^ add default error handler ^   */
 # define __FTST_TWO_CMP_3(...)           __FTST_TWO_CMP_4(__VA_ARGS__, __FTST_EQ_DEFAULT_TYPE)
+/*      ^ add default vars type ^       */
 # define __FTST_TWO_CMP_2(...)           __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_1)
 # define __FTST_TWO_CMP_1(...)           __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_0)
 # define __FTST_TWO_CMP_0()              __FTST_STATIC_ASSERT(0,)
@@ -796,10 +785,15 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_ACCUR_CMP_13(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
 # define __FTST_ACCUR_CMP_12(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
 # define __FTST_ACCUR_CMP_11(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
+/*      ^ addition args for format string ^       */
 # define __FTST_ACCUR_CMP_10(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
+/*      ^ go to real cmp ^              */
 # define __FTST_ACCUR_CMP_9(...)         __FTST_ACCUR_CMP_10(__VA_ARGS__, NULL)
+/*      ^ add default format string ^   */
 # define __FTST_ACCUR_CMP_8(...)         __FTST_ACCUR_CMP_9(__VA_ARGS__, FTST_EXPECT)
-# define __FTST_ACCUR_CMP_7(...)         __FTST_ACCUR_CMP_8(__VA_ARGS__, __FTST_EQ_DEFAULT_TYPE)
+/*      ^ add default error handler ^   */
+# define __FTST_ACCUR_CMP_7(...)         __FTST_ACCUR_CMP_8(__VA_ARGS__, f)
+/*      ^ add default vars type ^       */
 # define __FTST_ACCUR_CMP_6(...)         __FTST_STATIC_ASSERT(0, eq_take_3_or_more_arguments_not_2)
 # define __FTST_ACCUR_CMP_5(...)         __FTST_STATIC_ASSERT(0, eq_take_3_or_more_arguments_not_1)
 # define __FTST_ACCUR_CMP_4(...)         __FTST_STATIC_ASSERT(0, eq_take_3_or_more_arguments_not_0)
@@ -818,10 +812,15 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_ONE_CMP_9(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
 # define __FTST_ONE_CMP_8(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
 # define __FTST_ONE_CMP_7(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
+/*      ^ addition args for format string ^       */
 # define __FTST_ONE_CMP_6(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
+/*      ^ go to real cmp ^              */
 # define __FTST_ONE_CMP_5(...)           __FTST_ONE_CMP_6(__VA_ARGS__, NULL)
+/*      ^ add default format string ^   */
 # define __FTST_ONE_CMP_4(...)           __FTST_ONE_CMP_5(__VA_ARGS__, FTST_EXPECT)
+/*      ^ add default error handler ^   */
 # define __FTST_ONE_CMP_3(...)           __FTST_ONE_CMP_4(__VA_ARGS__, __FTST_EQ_DEFAULT_TYPE)
+/*      ^ add default vars type ^       */
 # define __FTST_ONE_CMP_2(...)           __FTST_STATIC_ASSERT(0, bool_cmp_take_1_or_more_arguments_not_0)
 # define __FTST_ONE_CMP_1(...)           __FTST_STATIC_ASSERT(0,)
 # define __FTST_ONE_CMP_0()              __FTST_STATIC_ASSERT(0,)
@@ -848,6 +847,31 @@ extern void    __ftst_test_write_description(char const* description_name,
 
 # define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
+
+# if        FTST_NAMESPACE
+#  define EQ            FTST_EQ
+#  define NE            FTST_NE
+#  define LESS          FTST_LESS
+#  define LESSEQ        FTST_LESSEQ
+#  define MORE          FTST_MORE
+#  define MOREEQ        FTST_MOREEQ
+
+#  define EQ_A          FTST_EQ_A
+#  define NE_A          FTST_NE_A
+
+#  define STR_EQ        FTST_STR_EQ
+#  define STR_NE        FTST_STR_NE
+#  define STR_LESS      FTST_STR_LESS
+#  define STR_LESSEQ    FTST_STR_LESSEQ
+#  define STR_MORE      FTST_STR_MORE
+#  define STR_MOREEQ    FTST_STR_MOREEQ
+
+#  define IS_TRUE       FTST_IS_TRUE
+#  define IS_FALSE      FTST_IS_FALSE
+
+#  define EXPECT        FTST_EXPECT
+#  define ASSERT        FTST_ASSERT
+# endif
 
 /*************************************************************
 **			Initialization and execution tests				**
@@ -912,12 +936,12 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
 
 # ifdef FTST_MAIN_FILE
 
-# define __FTST_PRETTY_TEST_STATUS(status, test_case_name) "%-20s : " __FTST_PRETTY_TEST_CASE_NAME("%s"), \
+# define __FTST_PRETTY_TEST_STATUS(status, test_case_name) "%-20s : " __FTST_PRETTY_STR_CYAN("%s"), \
                                                           status,                          test_case_name
 
-# define __FTST_PRETTY_START_TEST(test_case_name)        __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_PROCESSED( "[launched]"  ), test_case_name)
-# define __FTST_PRETTY_SUCCESS_TEST(test_case_name)      __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_SUCCESS(   "[success]"    ), test_case_name)
-# define __FTST_PRETTY_FAILED_TEST(test_case_name)       __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_FAILED(    "[failed]"     ), test_case_name)
+# define __FTST_PRETTY_START_TEST(test_case_name)        __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_STR_YELLOW(  "[launched]"   ), test_case_name)
+# define __FTST_PRETTY_SUCCESS_TEST(test_case_name)      __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_STR_GREEN(   "[success]"    ), test_case_name)
+# define __FTST_PRETTY_FAILED_TEST(test_case_name)       __FTST_PRETTY_TEST_STATUS( __FTST_PRETTY_STR_RED(     "[failed]"     ), test_case_name)
 
 static void    __ftst_pretty_print_start(char const *test_case_name)
 {
@@ -937,15 +961,15 @@ static void    __ftst_pretty_print_result(
 
     if (test.passed == test.launched)
         __FTST_STREAM_PRINTF(
-            __FTST_PRETTY_SUCCESS("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+            __FTST_PRETTY_STR_GREEN("%zu") "/" __FTST_PRETTY_STR_GREEN("%zu"),
                                 test.passed,                   test.launched);
     else
         __FTST_STREAM_PRINTF(
-            __FTST_PRETTY_FAILED("%zu") "/" __FTST_PRETTY_SUCCESS("%zu"),
+            __FTST_PRETTY_STR_RED("%zu") "/" __FTST_PRETTY_STR_GREEN("%zu"),
                                 test.passed,                   test.launched);
 
     __FTST_STREAM_PRINTF(
-        " [" __FTST_PRETTY_INFO("%.3fms") "]\n",
+        " [" __FTST_PRETTY_STR_BLUE("%.3fms") "]\n",
                             time / 1000.);
     
 }
@@ -990,5 +1014,10 @@ extern __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char co
         __ftst_current->passed      += __results.passed;                                        \
         __ftst_current->launched    += __results.launched;                                      \
     }
+
+# if FTST_NAMESPACE
+#  define TEST          FTST_TEST
+#  define RUNTEST       FTST_RUNTEST
+# endif
 
 #endif
