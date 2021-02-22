@@ -43,8 +43,8 @@
 ** FTST_ALLOC_TEST
 ** if define as 'false' or '0' all allocation tests will be removed
 */
-# ifndef        FTST_ALLOC_TEST
-#  define       FTST_ALLOC_TEST     false
+# ifndef        FTST_MALLOC_TEST
+#  define       FTST_MALLOC_TEST     false
 # endif
 # ifndef        FTST_VAR_STR_BUFFER
 #  define       FTST_VAR_STR_BUFFER 128
@@ -222,20 +222,22 @@ extern void    __ftst_write_to_stream(FILE* stream, char const* format, ...);
 **                  ALLOCATION TEST					**
 *****************************************************/
 
-# if        FTST_ALLOC_TEST
+# if        FTST_MALLOC_TEST
 
-#  if   defined(__linux__)
-#   include <malloc.h>
-#   define _GNU_SOURCE
-#   define __USE_GNU
-#  elif defined(__APPLE__)
-#   include <malloc/malloc.h>
-#  endif
-#  include <dlfcn.h>
-#  include <errno.h>
+#  ifdef       FTST_MAIN_FILE
+#   if   defined(__linux__)
+#    include <malloc.h>
+#    define _GNU_SOURCE
+#    define __USE_GNU
+#   elif defined(__APPLE__)
+#    include <malloc/malloc.h>
+#   endif
+#   include <dlfcn.h>
+#   include <errno.h>
 /*
 ** On linux use -ldl flag to link dlfcn lib
 */
+#  endif
 
 
 typedef struct {
@@ -252,66 +254,43 @@ typedef struct {
 
 __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 
-#  define   __FTST_ALLOC_SET(value, test)       \
+#  define   __FTST_MALLOC_SET(value, test)      \
     {                                           \
         test.is_active = true;                  \
         test.d = value;                         \
     }
 
-#  define   __FTST_ALLOC_CLEAN(test)            \
+#  define   __FTST_MALLOC_CLEAN(test)           \
     {                                           \
         test.is_active = false;                 \
     }
 
-#  define   FTST_ALLOC_COUNTER_SET(value)           __FTST_ALLOC_SET(value, __ftst_alloc_test.fail_counter)
-#  define   FTST_ALLOC_COUNTER_CLEAN()              __FTST_ALLOC_CLEAN(__ftst_alloc_test.fail_counter)
+#  define   FTST_MALLOC_COUNTER_SET(value)           __FTST_MALLOC_SET(value, __ftst_alloc_test.fail_counter)
+#  define   FTST_MALLOC_COUNTER_CLEAN()              __FTST_MALLOC_CLEAN(__ftst_alloc_test.fail_counter)
 
-#  define   FTST_ALLOC_LIMIT_SET(value)             __FTST_ALLOC_SET(value, __ftst_alloc_test.limit)
-#  define   FTST_ALLOC_LIMIT_CLEAN()                __FTST_ALLOC_CLEAN(__ftst_alloc_test.limit)
+#  define   FTST_MALLOC_LIMIT_SET(value)             __FTST_MALLOC_SET(value, __ftst_alloc_test.limit)
+#  define   FTST_MALLOC_LIMIT_CLEAN()                __FTST_MALLOC_CLEAN(__ftst_alloc_test.limit)
 
-#  define   FTST_ALLOC_SINGLE_LIMIT_SET(value)      __FTST_ALLOC_SET(value, __ftst_alloc_test.single_limit)
-#  define   FTST_ALLOC_SINGLE_LIMIT_CLEAN()         __FTST_ALLOC_CLEAN(__ftst_alloc_test.single_limit)
+#  define   FTST_MALLOC_SINGLE_LIMIT_SET(value)      __FTST_MALLOC_SET(value, __ftst_alloc_test.single_limit)
+#  define   FTST_MALLOC_SINGLE_LIMIT_CLEAN()         __FTST_MALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
 /*
 **
 **  FTST_ALLOC_CLEAN call clean for all alloc limits
 **
 */
-#  define   FTST_ALLOC_CLEAN()              \
+#  define   FTST_MALLOC_CLEAN()             \
     {                                       \
-        FTST_ALLOC_SINGLE_LIMIT_CLEAN();    \
-        FTST_ALLOC_LIMIT_CLEAN();           \
-        FTST_ALLOC_COUNTER_CLEAN();         \
+        FTST_MALLOC_SINGLE_LIMIT_CLEAN();   \
+        FTST_MALLOC_LIMIT_CLEAN();          \
+        FTST_MALLOC_COUNTER_CLEAN();        \
     }
 
 #  define   FTST_IS_MALLOC_ERROR    __ftst_alloc_test.error_happend
 
-#  define   FTST_ALLOC_IF_ERROR(true_branch)                \
-    {                                                       \
-        if (FTST_IS_MALLOC_ERROR)                           \
-        {                                                   \
-            true_branch;                                    \
-        }                                                   \
-    }
-
-#  define   FTST_ALLOC_IF_ERROR_ELSE(true_branch, false_branch) \
-    {                                                       \
-        if (FTST_IS_MALLOC_ERROR)                           \
-        {                                                   \
-            true_branch                                     \
-        }                                                   \
-        else                                                \
-        {                                                   \
-            false_branch;                                   \
-        }                                                   \
-    }
-
-
 #  ifdef FTST_MAIN_FILE
-
 static void*(*libc_malloc)(size_t);
 static void(*libc_free)(void*);
-
 #  endif
 
 /*              LIST MANAGMENT FUNCTIONS          */
@@ -499,19 +478,18 @@ static void __ftst_exit_alloc(void) { }
 
 # else
 
-#  define  FTST_ALLOC_COUNTER_SET(...)
-#  define  FTST_ALLOC_COUNTER_CLEAN(...)
+#  define  FTST_MALLOC_COUNTER_SET(...)
+#  define  FTST_MALLOC_COUNTER_CLEAN(...)
 
-#  define  FTST_ALLOC_LIMIT_SET(...)
-#  define  FTST_ALLOC_LIMIT_CLEAN(...)
+#  define  FTST_MALLOC_LIMIT_SET(...)
+#  define  FTST_MALLOC_LIMIT_CLEAN(...)
 
-#  define  FTST_ALLOC_SINGLE_LIMIT_SET(...)
-#  define  FTST_ALLOC_SINGLE_LIMIT_CLEAN(...)
-
-#  define  FTST_ALLOC_IF_ERROR(...)
-#  define  FTST_ALLOC_IF_ERROR_ELSE(...)
+#  define  FTST_MALLOC_SINGLE_LIMIT_SET(...)
+#  define  FTST_MALLOC_SINGLE_LIMIT_CLEAN(...)
 
 #  define  FTST_LEAK_RESET(...)
+
+#  define  FTST_IS_MALLOC_ERROR     0
 
 #  define  FTST_MALLOC_SIZE(...)    0
 #  define  FTST_LEAKS(...)          0
@@ -519,19 +497,16 @@ static void __ftst_exit_alloc(void) { }
 # endif
 
 # if       FTST_NAMESPACE
-#  define  ALLOC_COUNTER_SET           FTST_ALLOC_COUNTER_SET
-#  define  ALLOC_COUNTER_CLEAN         FTST_ALLOC_COUNTER_CLEAN
+#  define  MALLOC_COUNTER_SET           FTST_MALLOC_COUNTER_SET
+#  define  MALLOC_COUNTER_CLEAN         FTST_MALLOC_COUNTER_CLEAN
 
-#  define  ALLOC_LIMIT_SET             FTST_ALLOC_LIMIT_SET
-#  define  ALLOC_LIMIT_CLEAN           FTST_ALLOC_LIMIT_CLEAN
+#  define  MALLOC_LIMIT_SET             FTST_MALLOC_LIMIT_SET
+#  define  MALLOC_LIMIT_CLEAN           FTST_MALLOC_LIMIT_CLEAN
 
-#  define  ALLOC_SINGLE_LIMIT_SET      FTST_ALLOC_SINGLE_LIMIT_SET
-#  define  ALLOC_SINGLE_LIMIT_CLEAN    FTST_ALLOC_SINGLE_LIMIT_CLEAN
+#  define  MALLOC_SINGLE_LIMIT_SET      FTST_MALLOC_SINGLE_LIMIT_SET
+#  define  MALLOC_SINGLE_LIMIT_CLEAN    FTST_MALLOC_SINGLE_LIMIT_CLEAN
 
-#  define  ALLOC_CLEAN                 FTST_ALLOC_CLEAN                                    
-
-#  define  ALLOC_IF_ERROR              FTST_ALLOC_IF_ERROR
-#  define  ALLOC_IF_ERROR_ELSE         FTST_ALLOC_IF_ERROR_ELSE
+#  define  MALLOC_CLEAN                 FTST_MALLOC_CLEAN                                    
 
 #  define  LEAK_RESET                  FTST_LEAK_RESET                   
 
@@ -620,9 +595,6 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_TYPE_gf                 float
 # define __FTST_TYPE_g                  double
 # define __FTST_TYPE_Lg                 long double
-# define __FTST_TYPE_ff                 float
-# define __FTST_TYPE_f                  double
-# define __FTST_TYPE_Lf                 long double
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
 # define __FTST_TYPE_s                  char*
@@ -656,30 +628,37 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 
 # ifdef FTST_MAIN_FILE
 void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value)
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
+                            char const *description)
 {
     __FTST_WRITE_ERROR_TO_STREAM(
         "["__FTST_PRETTY_INFO("%s")"] test from '%s' [" __FTST_PRETTY_FAILED("failed")"]" \
-        "\n%zu:\t" "actual: " __FTST_PRETTY_INFO("%s")"[%s]",
-            test_name, test_case_name, line, actual_value, actual);
+        "\n%4zu:\t" "%6s: " __FTST_PRETTY_INFO("%s")"[%s]\n",
+            test_name, test_case_name, line, "actual", actual_value, actual);
     if (expect != NULL)
     {
         __FTST_WRITE_ERROR_TO_STREAM(
-            ",   expected: " __FTST_PRETTY_INFO("%s")"[%s]",
+            "      expected: " __FTST_PRETTY_INFO("%s")"[%s]\n",
             expect_value, expect);
     }
-    
-    __FTST_WRITE_ERROR_TO_STREAM("\n");
+    if (description != NULL)
+    {
+        __FTST_WRITE_ERROR_TO_STREAM(
+            "   description: " __FTST_PRETTY_PROCESSED("%s\n"),
+            description);
+    }
+
     __FTST_FFLUSH_STREAM();
 }
 # else
 extern void    __ftst_test_error(size_t const line, char const* test_case_name, char const* test_name,
-                            char const *actual, const char* actual_value, char const* expect, char const* expect_value);
+                            char const *actual, const char* actual_value, char const* expect, char const* expect_value,
+                            char const *description);
 # endif
 
-# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str) \
+# define __FTST_TEST_ERROR(_test_name, actual, actual_str, expect, expect_str, description) \
         __ftst_test_error(__LINE__, __ftst_current->test_name, \
-                    _test_name, actual, actual_str, expect, expect_str)
+                    _test_name, actual, actual_str, expect, expect_str, description)
 
 /****************************************************/
 /*					TEST TEMPLATES					*/
@@ -687,49 +666,52 @@ extern void    __ftst_test_error(size_t const line, char const* test_case_name, 
 # define FTST_EXPECT
 # define FTST_ASSERT return;
 
-# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct)                                        \
+# define __FTST_STR_CMP_REAL(actual, operation, expect, error_funct, description)                           \
         {                                                                                                   \
             char const* actual_v = actual;                                                                  \
             char const* expect_v = expect;                                                                  \
             __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                      \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v);            \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_v, #expect, expect_v, description);\
                             error_funct)                                                                    \
         }
 
-# define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, type)                                  \
+# define __FTST_TWO_CMP_REAL(actual, operation, expect, error_funct, type, description)                     \
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_GET_TYPE(type) expect_v = expect;                                                        \
             __FTST_SIMPLE_TEST((actual_v) operation (expect_v),                                             \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
                             __FTST_SNPRINTF(expect_str, FTST_VAR_STR_BUFFER, "%"#type, expect_v);           \
-                            __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str);        \
+                            __FTST_TEST_ERROR(#operation, #actual, actual_str, #expect, expect_str, description);\
                             error_funct)                                                                    \
         }
 
-# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, type)                                    \
+# define __FTST_ONE_CMP_REAL(actual, operation, name, error_funct, type, description)                       \
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_SIMPLE_TEST(operation(actual_v),                                                         \
                             __FTST_SNPRINTF(actual_str, FTST_VAR_STR_BUFFER, "%"#type, actual_v);           \
-                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL);                       \
+                            __FTST_TEST_ERROR(name, #actual, actual_str, NULL, NULL, description);          \
                             error_funct)                                                                    \
         }
 
-# define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_REAL(actual, operator, expect, error_funct)
+# define __FTST_STR_CMP_5(operator, actual, expect, error_funct, description)         __FTST_STR_CMP_REAL(actual, operator, expect, error_funct, description)
+# define __FTST_STR_CMP_4(operator, actual, expect, error_funct)                      __FTST_STR_CMP_5(operator, actual, expect, error_funct, NULL)
 # define __FTST_STR_CMP_3(operator, actual, expect)                                   __FTST_STR_CMP_4(operator, actual, expect, FTST_EXPECT)
 # define __FTST_STR_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_1)
 # define __FTST_STR_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_0)
 # define __FTST_STR_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
-# define __FTST_TWO_CMP_5(operator, actual, expect, type, error_funct)                __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type)
+# define __FTST_TWO_CMP_6(operator, actual, expect, type, error_funct, description)   __FTST_TWO_CMP_REAL(actual, operator, expect, error_funct, type, description)
+# define __FTST_TWO_CMP_5(operator, actual, expect, type, error_funct)                __FTST_TWO_CMP_6(operator, actual, expect, type, error_funct, NULL)
 # define __FTST_TWO_CMP_4(operator, actual, expect, type)                             __FTST_TWO_CMP_5(operator, actual, expect, type, FTST_EXPECT)
 # define __FTST_TWO_CMP_3(operator, actual, expect)                                   __FTST_TWO_CMP_4(operator, actual, expect, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_TWO_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_1)
 # define __FTST_TWO_CMP_1(a)                                                          __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_0)
 # define __FTST_TWO_CMP_0()                                                           __FTST_STATIC_ASSERT(0,)
 
-# define __FTST_ONE_CMP_5(operator, name, actual, type, error_funct)                  __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type)
+# define __FTST_ONE_CMP_6(operator, name, actual, type, error_funct, description)     __FTST_ONE_CMP_REAL(actual, operator, name, error_funct, type, description)
+# define __FTST_ONE_CMP_5(operator, name, actual, type, error_funct)                  __FTST_ONE_CMP_6(operator, name, actual, type, error_funct, NULL)
 # define __FTST_ONE_CMP_4(operator, name, actual, type)                               __FTST_ONE_CMP_5(operator, name, actual, type, FTST_EXPECT)
 # define __FTST_ONE_CMP_3(operator, name, actual)                                     __FTST_ONE_CMP_4(operator, name, actual, __FTST_EQ_DEFAULT_TYPE)
 # define __FTST_ONE_CMP_2(a, b)                                                       __FTST_STATIC_ASSERT(0, bool_cmp_take_1_or_more_arguments_not_0)
@@ -779,7 +761,7 @@ static void    __ftst_init_stream(FILE* stream_output)
 
 static void    __ftst_init(FILE* stream_output, char const* table_name)
 {
-# if FTST_ALLOC_TEST
+# if FTST_MALLOC_TEST
     __ftst_init_alloc();
 # endif
     __ftst_init_stream(stream_output);
@@ -879,8 +861,6 @@ __ftst_test_results      __ftst_run_test(__ftst_test_t test_case, char const* te
     test_case(&test_results);
     time = ftst_time(time);
 
-	if (test_results.passed == test_results.launched)
-		__FTST_WRITE_TO_STREAM(__FTST_ANSI_CLEAR_LINE);
     __ftst_pretty_print_result(test_case_name, test_results, time);
 
 
