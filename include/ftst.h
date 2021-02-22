@@ -595,6 +595,9 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_TYPE_gf                 float
 # define __FTST_TYPE_g                  double
 # define __FTST_TYPE_Lg                 long double
+# define __FTST_TYPE_ff                 float
+# define __FTST_TYPE_f                  double
+# define __FTST_TYPE_Lf                 long double
 # define __FTST_TYPE_c                  char
 # define __FTST_TYPE_lc                 wchar_t
 # define __FTST_TYPE_s                  char*
@@ -783,7 +786,7 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
     if (__ftst_g.table)
         fclose(__ftst_g.table);
 
-# if FTST_ALLOC_TEST
+# if FTST_MALLOC_TEST
     __ftst_exit_alloc();
 # endif
     __ftst_g.table   = NULL;
