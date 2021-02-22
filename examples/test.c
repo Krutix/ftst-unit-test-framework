@@ -27,12 +27,18 @@ TEST(string_cmp)
     STR_NE("hello worlb", "hello world");
 }
 
+TEST(cmp_with_accuracy)
+{
+    EQ_A(0.1 + 0.2, 0.3, 0.0, f);
+    EQ_A(0.1 + 0.2, 0.3, 0.000005, f);
+}
+
 TEST(error_test)
 {
     EQ(-1, 1);
     EQ(-1llu, -1llu, llu);
     LESS(-1llu, 1llu, llu);
-    LESSEQ(-1llu, 1llu, llu);
+    LESSEQ(-1llu, 1llu, llu, EXPECT, "castom comment %i", 1);
     EQ(-1llu, 1llu, llu, ASSERT, "some error happend");
     EQ(-1, 1);
 }
@@ -44,6 +50,7 @@ int main()
     RUNTEST(equal_test);
     RUNTEST(boolean_test);
     RUNTEST(string_cmp);
+    RUNTEST(cmp_with_accuracy);
     RUNTEST(error_test);
 
     return FTST_EXIT();
