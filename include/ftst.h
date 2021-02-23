@@ -9,7 +9,7 @@
 # include <stdbool.h>
 
 /*************************************************
-**              Default settings				**
+**              Default settings                **
 *************************************************/
 
 /*
@@ -65,7 +65,7 @@
 # endif
 
 /************************************************/
-/*					global data					*/
+/*                  global data                 */
 
 typedef struct {
     size_t      passed;
@@ -82,7 +82,7 @@ __FTST_EXTERN __ftst_global __ftst_g;
 
 
 /*****************************************************
-**                   ASSERTION						**
+**                   ASSERTION                      **
 *****************************************************/
 
 # if        FTST_NAMESPACE
@@ -130,13 +130,13 @@ __FTST_EXTERN __ftst_global __ftst_g;
 
 # if FTST_ASSERT_LEVEL >= 1
 # define  FTST_STATIC_ASSERT(expr, error_message)                \
-		__FTST_STATIC_ASSERT(expr, error_message)
+        __FTST_STATIC_ASSERT(expr, error_message)
 # else
 #  define FTST_STATIC_ASSERT(expr, error_message)
 # endif
 
 /*****************************************************
-**                   PRETTY_PRINT					**
+**                   PRETTY_PRINT                   **
 *****************************************************/
 
 /*          COLORS          */
@@ -215,7 +215,7 @@ extern void    __ftst_fprintf(FILE* stream, char const* format, ...);
 # endif
 
 /*****************************************************
-**                  ALLOCATION TEST					**
+**                  ALLOCATION TEST                 **
 *****************************************************/
 
 # if        FTST_MALLOC_TEST
@@ -270,11 +270,7 @@ __FTST_EXTERN __ftst_alloc __ftst_alloc_test;
 #  define   FTST_MALLOC_SINGLE_LIMIT_SET(value)      __FTST_MALLOC_SET(value, __ftst_alloc_test.single_limit)
 #  define   FTST_MALLOC_SINGLE_LIMIT_CLEAN()         __FTST_MALLOC_CLEAN(__ftst_alloc_test.single_limit)
 
-/*
-**
-**  FTST_ALLOC_CLEAN call clean for all alloc limits
-**
-*/
+/*  FTST_ALLOC_CLEAN call clean for all alloc limits */
 #  define   FTST_MALLOC_CLEAN()             \
     {                                       \
         FTST_MALLOC_SINGLE_LIMIT_CLEAN();   \
@@ -294,78 +290,78 @@ static void(*libc_free)(void*);
 #  ifdef FTST_MAIN_FILE
 typedef struct      __ftst_list_s
 {
-	struct __ftst_list_s*   next;
-	void*                   ptr;
-	size_t                  size;
-}					__ftst_list;
+    struct __ftst_list_s*   next;
+    void*                   ptr;
+    size_t                  size;
+}                   __ftst_list;
 
 static __ftst_list*  __ftst_memory_aggregator;
 
 static __ftst_list*	__ftst_list_find(__ftst_list *begin_list, void *ptr_ref)
 {
-	while (begin_list)
-	{
-		if (begin_list->ptr == ptr_ref)
-			return (begin_list);
-		begin_list = begin_list->next;
-	}
-	return (NULL);
+    while (begin_list)
+    {
+        if (begin_list->ptr == ptr_ref)
+            return (begin_list);
+        begin_list = begin_list->next;
+    }
+    return (NULL);
 }
 
 static __ftst_list*	__ftst_create_list(void *ptr, size_t size)
 {
-	__ftst_list *new_node;
+    __ftst_list *new_node;
 
-	new_node = libc_malloc(sizeof(__ftst_list));
+    new_node = libc_malloc(sizeof(__ftst_list));
     __FTST_RUNTIME_ASSERT(new_node, "malloc can't allocate enough memory");
-	new_node->next = NULL;
-	new_node->ptr = ptr;
-	new_node->size = size;
-	return (new_node);
+    new_node->next = NULL;
+    new_node->ptr = ptr;
+    new_node->size = size;
+    return (new_node);
 }
 
 static void     __ftst_list_push_front(__ftst_list **begin_list, __ftst_list *node)
 {
-	node->next = *begin_list;
-	*begin_list = node;
+    node->next = *begin_list;
+    *begin_list = node;
 }
 
 static void     __ftst_list_remove_if(__ftst_list **begin_list, void* ptr_ref)
 {
-	__ftst_list*    buff;
-	__ftst_list*    prev;
-	__ftst_list*    next;
+    __ftst_list*    buff;
+    __ftst_list*    prev;
+    __ftst_list*    next;
 
-	buff = *begin_list;
-	prev = NULL;
-	while (buff)
-	{
-		next = buff->next;
-		if (buff->ptr == ptr_ref)
-		{
-			if (prev)
-				prev->next = buff->next;
-			else
-				*begin_list = buff->next;
-			libc_free(buff);
+    buff = *begin_list;
+    prev = NULL;
+    while (buff)
+    {
+        next = buff->next;
+        if (buff->ptr, ptr_ref)
+        {
+            if (prev)
+                prev->next = buff->next;
+            else
+                *begin_list = buff->next;
+            free(buff);
             return ;
-		}
-		else
-			prev = buff;
-		buff = next;
-	}
+        }
+        else
+            prev = buff;
+        buff = next;
+    }
 }
 
 static void	__ftst_list_clear(__ftst_list *begin_list)
 {
-	__ftst_list *buff;
+    __ftst_list *buff;
 
-	while (begin_list)
-	{
-		buff = begin_list;
-		begin_list = buff->next;
-		libc_free(buff);
-	}
+    while (begin_list)
+    {
+        buff = begin_list;
+        begin_list = buff->next;
+        libc_free(buff);
+    }
 }
 #  endif
 
@@ -600,7 +596,7 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_TYPE_ls                 wchar_t*
 
 /*****************************************************
-**              	TEST CASE						**
+**                  TEST CASE                       **
 *****************************************************/
 
 typedef     void(*__ftst_test_t)(__ftst_test_results*);
@@ -609,7 +605,7 @@ typedef     void(*__ftst_test_t)(__ftst_test_results*);
 void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 
 /****************************************************/
-/*					TEST BRANCH						*/
+/*                  TEST BRANCH                     */
 
 # define __FTST_SIMPLE_TEST(cond, error_funct)          \
 {                                                       \
@@ -622,7 +618,7 @@ void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
 }
 
 /****************************************************/
-/*					ERROR MESSAGE					*/
+/*                  ERROR MESSAGE                   */
 
 
 # ifdef FTST_MAIN_FILE
@@ -826,7 +822,7 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_ONE_CMP_0()              __FTST_STATIC_ASSERT(0,)
 
 /********************************************************/
-/*						REAL TEST						*/
+/*                      REAL TEST                       */
 
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, ==, __VA_ARGS__)
 # define FTST_NE(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, !=, __VA_ARGS__)
@@ -903,11 +899,10 @@ static void    __ftst_init(FILE* stream_output, char const* table_name)
     __ftst_init_table(table_name);
 }
 
-# define __FTST_INIT_2(stream_output, result_file_name) \
-        __ftst_init(stream_output, result_file_name);    \
-        __ftst_test_results __ftst_main_test = (__ftst_test_results) { 0, 0, "main"}; \
+# define __FTST_INIT_2(stream_output, result_file_name)                                 \
+        __ftst_init(stream_output, result_file_name);                                   \
+        __ftst_test_results __ftst_main_test = (__ftst_test_results) { 0, 0, "main"};   \
         __ftst_test_results* __ftst_current = &__ftst_main_test
-
 # define __FTST_INIT_1(stream_output)						__FTST_INIT_2(stream_output, NULL)
 # define __FTST_INIT_0()									__FTST_INIT_1(stdout)
 
@@ -928,11 +923,11 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
     return (-1);
 }
 
-# define FTST_EXIT()	__ftst_exit(__ftst_main_test)
+# define FTST_EXIT()    __ftst_exit(__ftst_main_test)
 # endif
 
 /********************************************************/
-/*					PRINT RESULTS						*/
+/*                   PRINT RESULTS                      */
 
 # ifdef FTST_MAIN_FILE
 
@@ -977,7 +972,7 @@ static void    __ftst_pretty_print_result(
 # endif
 
 /********************************************************/
-/*					TEST EXECUTION						*/
+/*                  TEST EXECUTION                      */
 
 static inline clock_t ftst_start_timer() { return clock(); }
 static inline clock_t ftst_time(clock_t start) { return clock() - start; }
