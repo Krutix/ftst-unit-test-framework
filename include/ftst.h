@@ -526,15 +526,18 @@ static void __ftst_exit_alloc(void) { }
 **
 */
 
-#define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
-#define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
-#define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
-            F##_16, F##_15, F##_14, F##_13, F##_12, F##_11, F##_10, F##_9, F##_8,     \
-            F##_7, F##_6, F##_5, F##_4, F##_3, F##_2, F##_1, ))
-#define __FTST_NO_ARG_EXPANDER(FUNC) ,,,,,,,,,,,,,,,,FUNC ## _0
-#define __FTST_MACRO_CHOOSER(FUNC, ...) __FTST_CHOOSE_FROM_ARG_COUNT(FUNC, __FTST_NO_ARG_EXPANDER __VA_ARGS__ (FUNC))
-#define __FTST_MULTI_MACRO(FUNC, ...) __FTST_MACRO_CHOOSER(FUNC, __VA_ARGS__)(__VA_ARGS__)
+# define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
+# define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
+# define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
+             F##_16, F##_15, F##_14, F##_13, F##_12, F##_11, F##_10, F##_9, F##_8,     \
+             F##_7, F##_6, F##_5, F##_4, F##_3, F##_2, F##_1, ))
+# define __FTST_NO_ARG_EXPANDER(FUNC) ,,,,,,,,,,,,,,,,FUNC ## _0
+# define __FTST_MACRO_CHOOSER(FUNC, ...) __FTST_CHOOSE_FROM_ARG_COUNT(FUNC, __FTST_NO_ARG_EXPANDER __VA_ARGS__ (FUNC))
+# define __FTST_MULTI_MACRO(FUNC, ...) __FTST_MACRO_CHOOSER(FUNC, __VA_ARGS__)(__VA_ARGS__)
 
+# define __FTST_EXPAND(...)         __VA_ARGS__
+# define __FTST_PARENTHESISE(...)  (__VA_ARGS__)
+# define __FTST_UNPARENTHESISE(x)  __FTST_EXPAND(__FTST_EXPAND x)
 
 # define __FTST_SNPRINTF(name, size, format, value)                 \
                     char name[size];                                \
@@ -676,19 +679,19 @@ extern void    __ftst_test_write_description(char const* description_name,
 
 # define __FTST_VA_UNPACK_1(a1, ...) a1
 
-# define __FTST_STR_CMP_REAL(operation, actual, expect, error_funct, ...)                                   \
+# define __FTST_STR_CMP_REAL(operation, actual, expect, error_funct, description, args)                     \
         {                                                                                                   \
             char const* actual_v = actual;                                                                  \
             char const* expect_v = expect;                                                                  \
             __FTST_SIMPLE_TEST(strcmp(actual_v, expect_v) operation 0,                                      \
                             __FTST_TEST_WRITE_ERROR(#operation, #actual, actual_v);                         \
                             __ftst_test_write_addition("expected", #expect, expect_v);                      \
-                            if (__FTST_VA_UNPACK_1(__VA_ARGS__))                                            \
-                                __ftst_test_write_description("description", __VA_ARGS__);                  \
+                            if (description)                                                                \
+                                __ftst_test_write_description("description", description, __FTST_UNPARENTHESISE(args));\
                             error_funct)                                                                    \
         }
 
-# define __FTST_TWO_CMP_REAL(operation, actual, expect, type, error_funct, ...)                             \
+# define __FTST_TWO_CMP_REAL(operation, actual, expect, type, error_funct, description, args)               \
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_GET_TYPE(type) expect_v = expect;                                                        \
@@ -697,12 +700,12 @@ extern void    __ftst_test_write_description(char const* description_name,
                             __FTST_SNPRINTF(expect_str, FTST_VAR_STR_BUFFER, "%"#type, expect_v);           \
                             __FTST_TEST_WRITE_ERROR(#operation, #actual, actual_str);                       \
                             __ftst_test_write_addition("expected", #expect, expect_str);                    \
-                            if (__FTST_VA_UNPACK_1(__VA_ARGS__))                                            \
-                                __ftst_test_write_description("description", __VA_ARGS__);                  \
+                            if (description)                                                                \
+                                __ftst_test_write_description("description", description, __FTST_UNPARENTHESISE(args));\
                             error_funct)                                                                    \
         }
 
-# define __FTST_ACCUR_CMP_REAL(name, o_l, o_logic, o_r, actual, expect, accur, type, error_funct, ...)      \
+# define __FTST_ACCUR_CMP_REAL(name, o_l, o_logic, o_r, actual, expect, accur, type, error_funct, description, args)\
         {                                                                                                   \
             __FTST_GET_TYPE(type) actual_v = actual;                                                        \
             __FTST_GET_TYPE(type) expect_v = expect;                                                        \
@@ -714,8 +717,8 @@ extern void    __ftst_test_write_description(char const* description_name,
                             __FTST_TEST_WRITE_ERROR(name, #actual, actual_str);                             \
                             __ftst_test_write_addition("expected", #expect, expect_str);                    \
                             __ftst_test_write_addition("accuracy", #accur, accur_str);                      \
-                            if (__FTST_VA_UNPACK_1(__VA_ARGS__))                                            \
-                                __ftst_test_write_description("description", __VA_ARGS__);                  \
+                            if (description)                                                                \
+                                __ftst_test_write_description("description", description, __FTST_UNPARENTHESISE(args));\
                             error_funct)                                                                    \
         }
 
@@ -730,20 +733,10 @@ extern void    __ftst_test_write_description(char const* description_name,
                             error_funct)                                                                    \
         }
 
-# define __FTST_STR_CMP_16(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_15(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_14(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_13(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_12(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_11(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_10(...)          __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_9(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_8(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
-# define __FTST_STR_CMP_7(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
 # define __FTST_STR_CMP_6(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
-/*      ^ addition args for format string ^     */
-# define __FTST_STR_CMP_5(...)           __FTST_STR_CMP_REAL(__VA_ARGS__)
 /*      ^ go to real cmp ^              */
+# define __FTST_STR_CMP_5(...)           __FTST_STR_CMP_6(__VA_ARGS__, (0))
+/*      ^ addition args for format string ^     */
 # define __FTST_STR_CMP_4(...)           __FTST_STR_CMP_5(__VA_ARGS__, NULL)
 /*      ^ add default format string ^   */
 # define __FTST_STR_CMP_3(...)           __FTST_STR_CMP_4(__VA_ARGS__, FTST_EXPECT)
@@ -752,19 +745,10 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_STR_CMP_1(...)           __FTST_STATIC_ASSERT(0, str_eq_take_2_or_more_arguments_not_0)
 # define __FTST_STR_CMP_0()              __FTST_STATIC_ASSERT(0,)
 
-# define __FTST_TWO_CMP_16(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_15(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_14(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_13(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_12(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_11(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_10(...)          __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_9(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
-# define __FTST_TWO_CMP_8(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
 # define __FTST_TWO_CMP_7(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
-/*      ^ addition args for format string ^       */
-# define __FTST_TWO_CMP_6(...)           __FTST_TWO_CMP_REAL(__VA_ARGS__)
 /*      ^ go to real cmp ^              */
+# define __FTST_TWO_CMP_6(...)           __FTST_TWO_CMP_7(__VA_ARGS__, (0))
+/*      ^ addition args for format string ^       */
 # define __FTST_TWO_CMP_5(...)           __FTST_TWO_CMP_6(__VA_ARGS__, NULL)
 /*      ^ add default format string ^   */
 # define __FTST_TWO_CMP_4(...)           __FTST_TWO_CMP_5(__VA_ARGS__, FTST_EXPECT)
@@ -775,14 +759,9 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_TWO_CMP_1(...)           __FTST_STATIC_ASSERT(0, eq_take_2_or_more_arguments_not_0)
 # define __FTST_TWO_CMP_0()              __FTST_STATIC_ASSERT(0,)
                                          
-# define __FTST_ACCUR_CMP_16(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
-# define __FTST_ACCUR_CMP_15(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
-# define __FTST_ACCUR_CMP_14(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
-# define __FTST_ACCUR_CMP_13(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
-# define __FTST_ACCUR_CMP_12(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
 # define __FTST_ACCUR_CMP_11(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
 /*      ^ addition args for format string ^       */
-# define __FTST_ACCUR_CMP_10(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
+# define __FTST_ACCUR_CMP_10(...)        __FTST_ACCUR_CMP_11(__VA_ARGS__, (0))
 /*      ^ go to real cmp ^              */
 # define __FTST_ACCUR_CMP_9(...)         __FTST_ACCUR_CMP_10(__VA_ARGS__, NULL)
 /*      ^ add default format string ^   */
@@ -798,19 +777,10 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_ACCUR_CMP_1(...)         __FTST_STATIC_ASSERT(0,)
 # define __FTST_ACCUR_CMP_0()            __FTST_STATIC_ASSERT(0,)
                                          
-# define __FTST_ONE_CMP_16(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_15(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_14(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_13(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_12(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_11(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_10(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_9(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-# define __FTST_ONE_CMP_8(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
 # define __FTST_ONE_CMP_7(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
-/*      ^ addition args for format string ^       */
-# define __FTST_ONE_CMP_6(...)           __FTST_ONE_CMP_REAL(__VA_ARGS__)
 /*      ^ go to real cmp ^              */
+# define __FTST_ONE_CMP_6(...)           __FTST_ONE_CMP_7(__VA_ARGS__, (0))
+/*      ^ addition args for format string ^       */
 # define __FTST_ONE_CMP_5(...)           __FTST_ONE_CMP_6(__VA_ARGS__, NULL)
 /*      ^ add default format string ^   */
 # define __FTST_ONE_CMP_4(...)           __FTST_ONE_CMP_5(__VA_ARGS__, FTST_EXPECT)
@@ -844,7 +814,11 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
 
+# define FTST_ARGS  __FTST_PARENTHESISE
+
 # if        FTST_NAMESPACE
+#  define ARGS          FTST_ARGS
+
 #  define EQ            FTST_EQ
 #  define NE            FTST_NE
 #  define LESS          FTST_LESS

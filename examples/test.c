@@ -29,7 +29,7 @@ TEST(string_cmp)
 
 TEST(cmp_with_accuracy)
 {
-    EQ_A(0.1 + 0.2, 0.3, 0.0, f);
+    EQ_A(0.1 + 0.2, 0.3, 0.0, f, EXPECT, "real 0.1 + 0.2 = %.20f", ARGS(0.1 + 0.2));
     EQ_A(0.1 + 0.2, 0.3, 0.000005, f);
 }
 
@@ -38,7 +38,7 @@ TEST(error_test)
     EQ(-1, 1);
     EQ(-1llu, -1llu, llu);
     LESS(-1llu, 1llu, llu);
-    LESSEQ(-1llu, 1llu, llu, EXPECT, "castom comment %i", 1);
+    LESSEQ(-1llu, 1llu, llu, EXPECT, "castom comment %i:%i", ARGS(1, 2));
     EQ(-1llu, 1llu, llu, ASSERT, "some error happend");
     EQ(-1, 1);
 }
