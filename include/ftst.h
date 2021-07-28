@@ -512,20 +512,19 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_TEST_CASE(test_name)        __ftst_test_case_##test_name
 # define __FTST_TEST_CASE_NAME(test_name)   #test_name
 
-/*
-**                           MULTI MACRO
-**  allow to use same name for macro with different number of args
-**
-**  __FTST_MULTI_MACRO choose macro named FUNC and postfix with number of args
-**
-**  example:
-**  __FTST_MULTI_MACRO(MY_MACRO, __VA_ARGS__)
-**  MY_MACRO_3(a, b, c) REAL_FUNCTION(a, b, c)
-**  MY_MACRO_2(a, b)    MY_MACRO(a, b, default_c)
-**  MY_MACRO_1(a)       MY_MACRO(a, default_b, default_c)
-**
-*/
+/*! \defgroup MULTI_MACRO
+ *  allow to use same name for macro with different number of args
+ *
+ * __FTST_MULTI_MACRO choose macro named FUNC and postfix with number of args
+ *
+ *  __FTST_MULTI_MACRO(MY_MACRO, __VA_ARGS__)
+ *  MY_MACRO_3(a, b, c) REAL_FUNCTION(a, b, c)
+ *  MY_MACRO_2(a, b)    MY_MACRO(a, b, default_c)
+ *  MY_MACRO_1(a)       MY_MACRO(a, default_b, default_c)
+ *
+ */
 
+//! \{
 # define __FTST_FUNC_CHOOSER(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
 # define __FTST_FUNC_RECOMPOSER(args_with_parentheses) __FTST_FUNC_CHOOSER args_with_parentheses
 # define __FTST_CHOOSE_FROM_ARG_COUNT(F, ...) __FTST_FUNC_RECOMPOSER((__VA_ARGS__,     \
@@ -539,33 +538,38 @@ static void __ftst_exit_alloc(void) { }
 # define __FTST_PARENTHESISE(...)  (__VA_ARGS__)
 # define __FTST_UNPARENTHESISE(x)  __FTST_EXPAND(__FTST_EXPAND x)
 
+//! \}
+
 # define __FTST_SNPRINTF(name, size, format, value)                 \
                     char name[size];                                \
                     snprintf(name, sizeof(name), format, value);
 
-/*
-**  Type converter from printf style to real type
-**
-**  i/d     | int
-**  li/ld   | long int
-**  lli/lld | long long int
-**  zi/zd   | ssize_t
-**
-**  u/x     | int
-**  lu/lx   | long int
-**  llu/llx | long long int
-**  p       | void*
-**  zu      | size_t
-**
-**  f/g     | double
-**  Lg/Lf   | long double
-**
-**  c       | char
-**  lc      | wchar_t
-**  s       | char*
-**  ls      | wchar_t*
-**
-*/
+/*!
+ * \enum FTST_TYPES
+ * \ingroup Comparison
+ * \brief Type converter from printf style to real type
+ *
+ * ftst type | real type
+ * --------- | ---------
+ *  i/d      | int
+ *  li/ld    | long int
+ *  lli/lld  | long long int
+ *  zi/zd    | ssize_t
+ *  u/x      | int
+ *  lu/lx    | long int
+ *  llu/llx  | long long int
+ *  p        | void*
+ *  zu       | size_t
+ *  f/g      | double
+ *  Lg/Lf    | long double
+ *  c        | char
+ *  lc       | wchar_t
+ *  s        | char*
+ *  ls       | wchar_t*
+ * 
+ * \param default i/d (int)
+ */
+enum FTST_TYPES { __FTST_TYPES };
 
 # define __FTST_EQ_DEFAULT_TYPE i
 
@@ -604,8 +608,17 @@ static void __ftst_exit_alloc(void) { }
 
 typedef     void(*__ftst_test_t)(__ftst_test_results*);
 
+//! \defgroup Test_case
+//! \{
+
+/*!
+ * \brief define a test case
+ * \warning Test case name must be unique in the whole project
+ */
 # define FTST_TEST(test_name)                           \
 void    __FTST_TEST_CASE(test_name)(__ftst_test_results* __ftst_current)
+
+//! \}
 
 /****************************************************/
 /*                  TEST BRANCH                     */
@@ -674,8 +687,12 @@ extern void    __ftst_test_write_description(char const* description_name,
 /****************************************************/
 /*					TEST TEMPLATES					*/
 
+//! \defgroup FTST_ERROR_HANDLER
+//! \ingroup Comparison
+//! \{
 # define FTST_EXPECT
 # define FTST_ASSERT return;
+//! \}
 
 # define __FTST_VA_UNPACK_1(a1, ...) a1
 
@@ -760,9 +777,9 @@ extern void    __ftst_test_write_description(char const* description_name,
 # define __FTST_TWO_CMP_0()              __FTST_STATIC_ASSERT(0,)
                                          
 # define __FTST_ACCUR_CMP_11(...)        __FTST_ACCUR_CMP_REAL(__VA_ARGS__)
-/*      ^ addition args for format string ^       */
-# define __FTST_ACCUR_CMP_10(...)        __FTST_ACCUR_CMP_11(__VA_ARGS__, (0))
 /*      ^ go to real cmp ^              */
+# define __FTST_ACCUR_CMP_10(...)        __FTST_ACCUR_CMP_11(__VA_ARGS__, (0))
+/*      ^ addition args for format string ^       */
 # define __FTST_ACCUR_CMP_9(...)         __FTST_ACCUR_CMP_10(__VA_ARGS__, NULL)
 /*      ^ add default format string ^   */
 # define __FTST_ACCUR_CMP_8(...)         __FTST_ACCUR_CMP_9(__VA_ARGS__, FTST_EXPECT)
@@ -794,54 +811,127 @@ extern void    __ftst_test_write_description(char const* description_name,
 /********************************************************/
 /*                      REAL TEST                       */
 
+//! \defgroup Comparison
+//! \{
+
+/*! \def GENERAL_PARAMETRS
+ * \brief general paramentrs for all value comparison
+ *
+ * \param type
+ * \ref FTST_TYPES
+ * \param error_handler
+ * \ref FTST_ERROR_HANDLER
+ * \param format_string format string for addition comments
+ * \param args addition args for format string
+ * \ref FTST_ARGS
+ */
+#define GENERAL_PARAMETRS
+
+/*!
+ * \defgroup Compare_2_values
+ * \param comparable
+ * \param sample
+ * \param GENERAL_PARAMETRS
+ * \ref GENERAL_PARAMETRS
+ */
+//! \{
 # define FTST_EQ(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, ==, __VA_ARGS__)
 # define FTST_NE(...)           __FTST_MULTI_MACRO(__FTST_TWO_CMP, !=, __VA_ARGS__)
 # define FTST_LESS(...)         __FTST_MULTI_MACRO(__FTST_TWO_CMP, < , __VA_ARGS__)
 # define FTST_LESSEQ(...)       __FTST_MULTI_MACRO(__FTST_TWO_CMP, <=, __VA_ARGS__)
 # define FTST_MORE(...)         __FTST_MULTI_MACRO(__FTST_TWO_CMP, > , __VA_ARGS__)
 # define FTST_MOREEQ(...)       __FTST_MULTI_MACRO(__FTST_TWO_CMP, >=, __VA_ARGS__)
+//! \}
 
+/*!
+ * \defgroup Compare_2_values_with_accuracy
+ * \param comparable
+ * \param sample
+ * \param accuracy
+ * \param GENERAL_PARAMETRS
+ * \ref GENERAL_PARAMETRS
+ */
+//! \{
 # define FTST_EQ_A(...)         __FTST_MULTI_MACRO(__FTST_ACCUR_CMP, "==", >=, &&, <=, __VA_ARGS__)
 # define FTST_NE_A(...)         __FTST_MULTI_MACRO(__FTST_ACCUR_CMP, "!=", < , ||, > , __VA_ARGS__)
+//! \}
 
+/*!
+ * \defgroup Compare_2_strings
+ * \param comparable
+ * \param sample
+ * \param accuracy
+ * \param GENERAL_PARAMETRS
+ * \ref GENERAL_PARAMETRS
+ */
+//! \{
 # define FTST_STR_EQ(...)       __FTST_MULTI_MACRO(__FTST_STR_CMP, ==, __VA_ARGS__)
 # define FTST_STR_NE(...)       __FTST_MULTI_MACRO(__FTST_STR_CMP, !=, __VA_ARGS__)
 # define FTST_STR_LESS(...)     __FTST_MULTI_MACRO(__FTST_STR_CMP, < , __VA_ARGS__)
 # define FTST_STR_LESSEQ(...)   __FTST_MULTI_MACRO(__FTST_STR_CMP, <=, __VA_ARGS__)
 # define FTST_STR_MORE(...)     __FTST_MULTI_MACRO(__FTST_STR_CMP, > , __VA_ARGS__)
 # define FTST_STR_MOREEQ(...)   __FTST_MULTI_MACRO(__FTST_STR_CMP, >=, __VA_ARGS__)
+//! \}
 
+/*!
+ * \defgroup Boolean_compare
+ * \param value
+ * \param GENERAL_PARAMETRS
+ * \ref GENERAL_PARAMETRS
+ */
+//! \{
 # define FTST_IS_TRUE(...)      __FTST_MULTI_MACRO(__FTST_ONE_CMP,   , "true" , __VA_ARGS__)
 # define FTST_IS_FALSE(...)     __FTST_MULTI_MACRO(__FTST_ONE_CMP,  !, "false", __VA_ARGS__)
+//! \}
 
+/*! \def FTST_ARGS(...)
+ * \brief collect any quantity of parametrs
+ * \ref GENERAL_PARAMETRS
+ */
 # define FTST_ARGS  __FTST_PARENTHESISE
 
 # if        FTST_NAMESPACE
 #  define ARGS          FTST_ARGS
 
+//! \ingroup Compare_2_values
+// \{
 #  define EQ            FTST_EQ
 #  define NE            FTST_NE
 #  define LESS          FTST_LESS
 #  define LESSEQ        FTST_LESSEQ
 #  define MORE          FTST_MORE
 #  define MOREEQ        FTST_MOREEQ
+// \}
 
+//! \ingroup Compare_2_values_with_accuracy
+// \{
 #  define EQ_A          FTST_EQ_A
 #  define NE_A          FTST_NE_A
+// \}
 
+//! \ingroup Compare_2_strings
+// \{
 #  define STR_EQ        FTST_STR_EQ
 #  define STR_NE        FTST_STR_NE
 #  define STR_LESS      FTST_STR_LESS
 #  define STR_LESSEQ    FTST_STR_LESSEQ
 #  define STR_MORE      FTST_STR_MORE
 #  define STR_MOREEQ    FTST_STR_MOREEQ
+// \}
 
+//! \ingroup Boolean_compare
+//! \{
 #  define IS_TRUE       FTST_IS_TRUE
 #  define IS_FALSE      FTST_IS_FALSE
+//! \}
 
+//! \ingroup FTST_ERROR_HANDLER
+//! \{
 #  define EXPECT        FTST_EXPECT
 #  define ASSERT        FTST_ASSERT
 # endif
+
+//! \}
 
 /*************************************************************
 **			Initialization and execution tests				**
@@ -880,6 +970,13 @@ static void    __ftst_init(FILE* stream_output, char const* table_name)
 # define __FTST_INIT_1(stream_output)						__FTST_INIT_2(stream_output, NULL)
 # define __FTST_INIT_0()									__FTST_INIT_1(stdout)
 
+/*! \def FTST_INIT(...)
+ * \ingroup Test_case
+ * \brief Init session, must be run after any FTST_RUNTEST
+ * \see FTST_RUNTEST
+ * \param stream_output
+ * \param result_file_name
+ */
 # define FTST_INIT(...) __FTST_MULTI_MACRO(__FTST_INIT, __VA_ARGS__)
 
 static int    __ftst_exit(__ftst_test_results __ftst_results)
@@ -897,6 +994,12 @@ static int    __ftst_exit(__ftst_test_results __ftst_results)
     return (-1);
 }
 
+/*!
+ * \def FTST_EXIT()
+ * \ingroup Test_case
+ * \brief ends test session. Return status
+ * \return status. 1 if some tests failes or 0 if all tests ended well
+ */
 # define FTST_EXIT()    __ftst_exit(__ftst_main_test)
 # endif
 
