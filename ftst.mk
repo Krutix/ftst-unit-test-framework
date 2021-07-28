@@ -11,7 +11,8 @@ FTST_TEST_GENERATOR	=	${FTST_DIR}gen_test_main.py
 FTST_TEST_RUNNER_SRC =	ftst_test_runner.c
 
 FTST_INC			=	${FTST_DIR}include/
-FTST_H_INC			=	${addprefix -I , ${FTST_INC}}
+FTST_LIB_DIRS		=
+FTST_LIBS			=
 
 FTST_SILENT_MODE	?=	1
 FTST_SILENT			=	-D FTST_SILENT=${FTST_SILENT_MODE} 
@@ -30,7 +31,7 @@ ifeq (${TARGET_OS}, Darwin)
 	FTST_ENTRY_POINT = _ftst_entry_point
 endif
 
-FTST_FLAGS			=	-nostartfiles -e${FTST_ENTRY_POINT} ${FTST_COLOR} ${FTST_MALLOC_TEST} ${FTST_SILENT}
+FTST_FLAGS			=	-nostartfiles -e${FTST_ENTRY_POINT} ${FTST_COLOR} ${FTST_MALLOC_TEST} ${FTST_SILENT} ${addprefix -L , ${FTST_LIB_DIRS}} ${addprefix -I , ${FTST_INC}}
 FTST_EXE			=	ftst.out
 
 .INTERMEDIATE: ${FTST_TEST_RUNNER_SRC}
@@ -39,7 +40,7 @@ ${FTST_TEST_RUNNER_SRC}: ${FTST_SRCS}
 
 .INTERMEDIATE: ${FTST_EXE}
 ${FTST_EXE}:	${FTST_TEST_RUNNER_SRC} ${FTST_TARGET}
-			@${CC} ${FTST_FLAGS} ${FTST_H_INC} ${FTST_SRCS} ${FTST_TEST_RUNNER_SRC} -o ${FTST_EXE} ${FTST_TARGET}
+			@${CC} ${FTST_FLAGS} ${FTST_SRCS} ${FTST_TEST_RUNNER_SRC} -o ${FTST_EXE} ${FTST_TARGET} ${FTST_LIBS}
 
 docs:
 			${MAKE} doxygen -f docs/doxygen.mk
