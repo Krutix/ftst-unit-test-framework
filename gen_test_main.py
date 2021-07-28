@@ -9,36 +9,28 @@ def get_all_tests(files : [str]) -> [str]: # get list of test files and fetch al
     output = subprocess.check_output(cmd, shell=True)
     return str(output).strip("'b\\n").split("\\n")
 
-def create_test_run_main(files, stdout=1, **kwargs):
+def create_test_run_main(files, stdout='stdout', **kwargs):
     ftst_test_runner = open('ftst_test_runner.c', 'w')
-
-    ftst_test_runner.write("#define FTST_MAIN_FILE\n")
-    ftst_test_runner.write("#include \"ftst.h\"\n")
-    ftst_test_runner.write("\n")
-
-    # test functions declaration
     tests = get_all_tests(files)
-    for test in tests:
-        ftst_test_runner.write(f"{test};\n")
+    nl = '\n'
+    main_function_text = \
+f'''
+#define FTST_MAIN_FILE
+#include "ftst.h"
 
-    ftst_test_runner.write("\n")
-    # main function
-    ftst_test_runner.write("int main()\n")
-    ftst_test_runner.write("{\n")
+{nl.join([test_case + ';' for test_case in tests])}
 
-    init_str = f"\tFTST_INIT({'stderr' if stdout == 2 else 'stdout' if stdout == 1 else 'NULL'}, "
-    init_str += "{});\n".format(f"\"{kwargs['file_stream']}\"" if 'file_stream' in kwargs else 'NULL')
-    ftst_test_runner.write(init_str)
-    ftst_test_runner.write("\n")
+int ftst_entry_point()
+{{
 
-    # run test functions
-    for test in tests:
-        ftst_test_runner.write(f"\t{test.replace('TEST', 'RUNTEST')};\n")
+	FTST_INIT({stdout});
 
-    ftst_test_runner.write("\n")
-    # return test status (0 - success, -1 fail)
-    ftst_test_runner.write("\treturn FTST_EXIT();\n")
-    ftst_test_runner.write("}\n")
+	{nl.join([test_case.replace('TEST', 'RUNTEST') + ';' for test_case in tests])}
+
+   	return FTST_EXIT();
+}}
+'''
+    ftst_test_runner.write(main_function_text)
 
 
 if __name__ == '__main__':
@@ -52,4 +44,6 @@ if __name__ == '__main__':
     arg_dict = {}
     if args.f != None:
         arg_dict = { 'file_stream': args.f[0] }
-    create_test_run_main(args.ftst_src_files, 2 if args.e != None else 0 if args.s != None else 1, **arg_dict)
+    output = 2 if args.e != None else 0 if args.s != None else 1
+    output = 'stderr' if output == 2 else 'stdout' if output == 1 else 'NULL' 
+    create_test_run_main(args.ftst_src_files, output, **arg_dict)
