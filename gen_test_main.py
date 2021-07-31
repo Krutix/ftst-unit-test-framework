@@ -16,18 +16,19 @@ def create_test_run_main(files, stdout='stdout', **kwargs):
     main_function_text = \
 f'''
 #define FTST_MAIN_FILE
+#include <stdlib.h>
 #include "ftst.h"
 
 {nl.join([test_case + ';' for test_case in tests])}
 
-int ftst_entry_point()
+int _start()
 {{
 
 	FTST_INIT({stdout});
 
 	{nl.join([test_case.replace('TEST', 'RUNTEST') + ';' for test_case in tests])}
 
-   	return FTST_EXIT();
+   	exit(FTST_EXIT());
 }}
 '''
     ftst_test_runner.write(main_function_text)
