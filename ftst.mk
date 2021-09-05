@@ -29,15 +29,6 @@ FTST_COLOR			=	-D FTST_COLOR=${FTST_COLOR_MODE}
 
 TARGET_OS = ${shell uname}
 ifeq (${TARGET_OS}, Linux)
-<<<<<<< Updated upstream
-	FTST_ENTRY_POINT = ftst_entry_point
-endif
-ifeq (${TARGET_OS}, Darwin)
-	FTST_ENTRY_POINT = _ftst_entry_point
-endif
-
-FTST_FLAGS			=	-nostartfiles -e${FTST_ENTRY_POINT} ${FTST_COLOR} ${FTST_MALLOC_TEST} ${FTST_SILENT} ${addprefix -L , ${FTST_LIB_DIRS}} ${addprefix -I , ${FTST_INC}}
-=======
 FTST_ENTRY_POINT = -nostartfiles -Wl,-e_start
 endif
 ifeq (${TARGET_OS}, Darwin)
@@ -51,7 +42,6 @@ FTST_FLAGS			= \
 		${FTST_SILENT} \
 		${addprefix -L , ${FTST_LIB_DIRS}} \
 		${addprefix -I , ${FTST_INC} ${FTST_DIR}include/}
->>>>>>> Stashed changes
 FTST_EXE			=	ftst.out
 
 .INTERMEDIATE: ${FTST_TEST_RUNNER_SRC}
