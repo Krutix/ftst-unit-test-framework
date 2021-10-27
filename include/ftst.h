@@ -27,9 +27,6 @@
 #  define       FTST_MALLOC_TEST     false
 # endif
 
-/************************************************/
-/*                  test data                   */
-
 /*!
 * \defgroup FTST TOOLCHAIN
 */
@@ -201,12 +198,47 @@ __FTST_STATICFUNC(type* __FTST_CONCAT(__ftst_get_, name)(void), \
 # define __FTST_PRETTY_STR_MAGENTA(str)         __FTST_PRETTY_WRAP_COLOR(__FTST_ANSI_COLOR_MAGENTA, str)
 # define __FTST_PRETTY_STR_CYAN(str)            __FTST_PRETTY_WRAP_COLOR(__FTST_ANSI_COLOR_BLUE, str)
 
+/*          TYPE DECORATORS          */
+
+# define __FTST_EQ_DEFAULT_TYPE i
+
+# define __FTST_GET_TYPE(type) __FTST_TYPE_##type
+
+# define __FTST_TYPE_i                  int
+# define __FTST_TYPE_li                 long __FTST_TYPE_i
+# define __FTST_TYPE_lli                long long __FTST_TYPE_i
+# define __FTST_TYPE_zi                 __ssize_t
+# define __FTST_TYPE_d                  __FTST_TYPE_i
+# define __FTST_TYPE_ld                 __FTST_TYPE_li
+# define __FTST_TYPE_lld                __FTST_TYPE_lli
+# define __FTST_TYPE_zd                 __FTST_TYPE_i
+# define __FTST_TYPE_u                  unsigned int
+# define __FTST_TYPE_lu                 long unsigned int
+# define __FTST_TYPE_llu                long long unsigned int
+# define __FTST_TYPE_x                  __FTST_TYPE_u
+# define __FTST_TYPE_lx                 __FTST_TYPE_lu
+# define __FTST_TYPE_llx                __FTST_TYPE_llu
+# define __FTST_TYPE_p                  void*
+# define __FTST_TYPE_zu                 size_t
+# define __FTST_TYPE_gf                 float
+# define __FTST_TYPE_g                  double
+# define __FTST_TYPE_Lg                 long double
+# define __FTST_TYPE_ff                 float
+# define __FTST_TYPE_f                  double
+# define __FTST_TYPE_Lf                 long double
+# define __FTST_TYPE_c                  char
+# define __FTST_TYPE_lc                 wchar_t
+# define __FTST_TYPE_s                  char*
+# define __FTST_TYPE_ls                 wchar_t*
+
 // TOOLCHAIN END
 //! \}
 
-/*****************************************************
-**                  ALLOCATION TEST                 **
-*****************************************************/
+/*!
+* \defgroup ALLOCATION TEST
+*/
+//! \{
+// ALLOCATION TEST START
 
 # if        FTST_MALLOC_TEST
 
@@ -230,12 +262,12 @@ typedef struct {
     bool error_happend;
 }   __ftst_alloc_t;
 
-typedef void*(*libc_malloc_t)(size_t);
-typedef void(*libc_free_t)(void*);
+typedef void*(*__libc_malloc_t)(size_t);
+typedef void(*__libc_free_t)(void*);
 
 __FTST_DEFINE_STATICVAR(__ftst_alloc_t, alloc);
-__FTST_DEFINE_STATICVAR(libc_malloc_t, libc_malloc);
-__FTST_DEFINE_STATICVAR(libc_free_t, libc_free);
+__FTST_DEFINE_STATICVAR(__libc_malloc_t, libc_malloc);
+__FTST_DEFINE_STATICVAR(__libc_free_t, libc_free);
 
 /*              LIST MANAGMENT FUNCTIONS          */
 
@@ -397,39 +429,59 @@ __FTST_STATICFUNC(
 void __ftst_exit_alloc(void), { })
 
 # endif
+// ALLOCATION TEST END
+//! \}
 
 /*******************************************************
 *******************************************************/
 
-# define __FTST_EQ_DEFAULT_TYPE i
+# define __FTST_INPASSERT(cmp, fail)   \
+{                                       \
+    if (!(cmp))                         \
+    {                                   \
+        fail                            \
+    }                                   \
+}
 
-# define __FTST_GET_TYPE(type) __FTST_TYPE_##type
+# define __FTST_CREATE_VARINPLACE(type, num, get)          \
+    __FTST_CONCAT(__FTST_TYPE_, type) __FTST_CONCAT(v,num) = get;
 
-# define __FTST_TYPE_i                  int
-# define __FTST_TYPE_li                 long __FTST_TYPE_i
-# define __FTST_TYPE_lli                long long __FTST_TYPE_i
-# define __FTST_TYPE_zi                 __ssize_t
-# define __FTST_TYPE_d                  __FTST_TYPE_i
-# define __FTST_TYPE_ld                 __FTST_TYPE_li
-# define __FTST_TYPE_lld                __FTST_TYPE_lli
-# define __FTST_TYPE_zd                 __FTST_TYPE_i
-# define __FTST_TYPE_u                  unsigned int
-# define __FTST_TYPE_lu                 long unsigned int
-# define __FTST_TYPE_llu                long long unsigned int
-# define __FTST_TYPE_x                  __FTST_TYPE_u
-# define __FTST_TYPE_lx                 __FTST_TYPE_lu
-# define __FTST_TYPE_llx                __FTST_TYPE_llu
-# define __FTST_TYPE_p                  void*
-# define __FTST_TYPE_zu                 size_t
-# define __FTST_TYPE_gf                 float
-# define __FTST_TYPE_g                  double
-# define __FTST_TYPE_Lg                 long double
-# define __FTST_TYPE_ff                 float
-# define __FTST_TYPE_f                  double
-# define __FTST_TYPE_Lf                 long double
-# define __FTST_TYPE_c                  char
-# define __FTST_TYPE_lc                 wchar_t
-# define __FTST_TYPE_s                  char*
-# define __FTST_TYPE_ls                 wchar_t*
+# define __FTST_CREATEVARS_0()         __FTST_STATIC_ASSERT(0,);
+# define __FTST_CREATEVARS_1(...)      __FTST_STATIC_ASSERT(0,);
+# define __FTST_CREATEVARS_2(type, get0)                    \
+    __FTST_CREATE_VARINPLACE(type, 0, get1)
+# define __FTST_CREATEVARS_3(type, get0, get1)             \
+    __FTST_CREATEVARS_2(type, get0)                         \
+    __FTST_CREATE_VARINPLACE(type, 1, get1)
+# define __FTST_CREATEVARS_4(type, get0, get1, get2)       \
+    __FTST_CREATEVARS_3(type, get0)                         \
+    __FTST_CREATE_VARINPLACE(type, 2, get2)
+# define __FTST_CREATEVARS_5(type, get0, get1, get2)       \
+    __FTST_CREATEVARS_4(type, get0)                         \
+    __FTST_CREATE_VARINPLACE(type, 3, get3)
+
+# define __FTST_CREATEVARS(...)        __FTST_MULTI_MACRO(__FTST_CREATEVARS, __VA_ARGS__)
+
+
+# define __FTST_ARGS_GETTYPE(type, fail) type
+# define __FTST_ARGS_GETFAIL(type, fail) fail
+
+# define __FTST_FAILACTION(args, msg)  \
+    {                                   \
+        __FTST_ARGS_GETFAIL(args)       \
+    }
+
+# define __FTST_COMPARE(cmp, getters, args, msg)                       \
+    {                                                                   \
+        __FTST_CREATE_VARINPLACE(__FTST_ARGS_GETTYPE(args), getters)    \
+        __FTST_INPASSERT(cmp, __FTST_FAILACTION(args, msg))             \
+    }
+
+# define __FTST_ARG_2(...)          // real FTST_OPEN_ARG
+# define __FTST_ARG_1(...)          __FTST_ARG_2(__VA_ARGS__, {})
+# define __FTST_ARG_0()             __FTST_ARG_1(__FTST_EQ_DEFAULT_TYPE)
+
+# define __FTST_MSG_1(...)          // real FTST_MSG
+# define __FTST_MSG_0()             __FTST_MSG_1(NULL)
 
 #endif
